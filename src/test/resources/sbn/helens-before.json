@@ -1,1 +1,1 @@
-{ "layer": "before", "type": "arg", "datatype": "int16", "rows": 1400, "cols": 979, "xmin": 557805.0, "ymax": 5122005.0, "cellwidth": 10.020429009193053, "cellheight": 10.028571428571428, "xmax": 567615.0, "ymin": 5107965.0, "xskew": 0.0, "yskew": 0.0, "epsg": 4267 }
+{ "layer": "helens-before", "type": "arg", "datatype": "int16", "rows": 1400, "cols": 979, "xmin": 557805.0, "ymax": 5122005.0, "cellwidth": 10.020429009193053, "cellheight": 10.028571428571428, "xmax": 567615.0, "ymin": 5107965.0, "xskew": 0.0, "yskew": 0.0, "epsg": 4267 }
