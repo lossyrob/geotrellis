@@ -106,3 +106,27 @@ class DrawRaster {
     }
   }
 }
+
+@Path("/hillshade")
+class HillSide {
+  @GET
+  @Path("/{name}")
+  def get(@PathParam("name") name:String,
+          @Context req:HttpServletRequest) = {
+    // load the raster
+    val rasterOp:Op[Raster] = io.LoadRaster(name)
+    
+    // Hillshade the raster
+    var hillShadeOp = focal.Hillshade(rasterOp);
+		
+    //render the png
+    val pngOp:Op[Array[Byte]] = io.RenderPngRgba(hillShadeOp)
+    
+    try {
+      val img:Array[Byte] = Demo.server.run(pngOp)
+      response("image/png")(img)
+    } catch {
+      case e => response("text/plain")(e.toString)
+   }
+  }
+}
