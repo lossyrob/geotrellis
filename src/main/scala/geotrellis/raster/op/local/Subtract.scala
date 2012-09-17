@@ -3,7 +3,7 @@ package geotrellis.raster.op.local
 import geotrellis._
 
 object Subtract {
-  def apply(x:Op[Int], y:Op[Int]) = logic.Do2(x, y)((x, y) => x + y)
+  def apply(x:Op[Int], y:Op[Int]) = logic.Do2(x, y)((x, y) => x - y)
   def apply(r:Op[Raster], c:Op[Int]) = SubtractConstant(r, c)
   def apply(c:Op[Int], r:Op[Raster]) = SubtractConstantBy(c, r)
   def apply(r1:Op[Raster], r2:Op[Raster]) = SubtractRaster(r1, r2)
