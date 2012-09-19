@@ -76,11 +76,26 @@ class BoundingBox {
 @Path("/draw")
 class DrawRaster {
   @GET
+  @Path("/{name}")
+  def get(@PathParam("name") name:String,
+          @Context req:HttpServletRequest):Response = {
+    get(name, "ff0000,0000ff","50",req)
+  }
+  
+  @GET
+  @Path("/{name}/shades/{shades}")
+  def get(@PathParam("name") name:String,
+          @PathParam("shades") shades:String,
+          @Context req:HttpServletRequest):Response = {
+    get(name, "ff0000,0000ff",shades,req)
+  }
+  
+  @GET
   @Path("/{name}/palette/{palette}/shades/{shades}")
   def get(@PathParam("name") name:String,
           @PathParam("palette") palette:String,
           @PathParam("shades") shades:String,
-          @Context req:HttpServletRequest) = {
+          @Context req:HttpServletRequest):Response = {
 
     // load the raster
     val rasterOp:Op[Raster] = io.LoadRaster(name)
@@ -108,7 +123,7 @@ class DrawRaster {
 }
 
 @Path("/hillshade")
-class HillSide {
+class HillShade {
   @GET
   @Path("/{name}")
   def get(@PathParam("name") name:String,
