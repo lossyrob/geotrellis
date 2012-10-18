@@ -45,13 +45,16 @@ case class TileLayout(tileCols:Int, tileRows:Int, pixelCols:Int, pixelRows:Int) 
   /**
    * This method is identical to getXCoords except that it functions on the
    * Y-axis instead.
+   * 
+   * Note that the origin tile (0,0) is in the upper left of the extent, so the
+   * upper left corner of the origin tile is (xmin, ymax).
    */
   def getYCoords(re:RasterExtent):Array[Double] = {
     val ys = Array.ofDim[Double](tileRows + 1)
     val ch = re.cellheight
-    val y1 = re.extent.ymin
-    for (i <- 0 until tileRows) ys(i) = y1 + i * ch * pixelRows
-    ys(tileRows) = re.extent.ymax
+    val y1 = re.extent.ymax
+    for (i <- 0 until tileRows) ys(i) = y1 - i * ch * pixelRows
+    ys(tileRows) = re.extent.ymin
     ys
   }
 
@@ -76,7 +79,7 @@ case class TileLayout(tileCols:Int, tileRows:Int, pixelCols:Int, pixelRows:Int) 
 case class ResolutionLayout(xs:Array[Double], ys:Array[Double],
                             cw:Double, ch:Double, pcols:Int, prows:Int) {
 
-  def getExtent(c:Int, r:Int) = Extent(xs(c), ys(r), xs(c + 1), ys(r + 1))
+  def getExtent(c:Int, r:Int) = Extent(xs(c), ys(r + 1), xs(c + 1), ys(r))
 
   def getRasterExtent(c:Int, r:Int) = {
     RasterExtent(getExtent(c, r), cw, ch, pcols, prows)
@@ -276,9 +279,9 @@ case class TileSetRasterData(basePath:String, name:String, typ:RasterType,
  * of the TileRasterData classes but requires all the tiles to be loaded as
  * Rasters.
  */
-case class TileArrayRasterData(tiles:Array[Raster],
-                               tileLayout:TileLayout,
-                               rasterExtent:RasterExtent) extends TiledRasterData {
+class TileArrayRasterData(val tiles:Array[Raster],
+                               val tileLayout:TileLayout,
+                               val rasterExtent:RasterExtent) extends TiledRasterData  {
   val typ = tiles(0).data.getType
   def alloc(cols:Int, rows:Int) = RasterData.allocByType(typ, cols, rows)
   def getType = typ
@@ -289,6 +292,25 @@ case class TileArrayRasterData(tiles:Array[Raster],
   def getTileOp(rl:ResolutionLayout, c:Int, r:Int):Op[Raster] =
     Literal(getTileRaster(rl, c, r))
 }
+
+object TileArrayRasterData {
+  def apply(tiles:Array[Raster], tileLayout:TileLayout, rasterExtent:RasterExtent) = 
+    new TileArrayRasterData(tiles, tileLayout, rasterExtent)
+  /**
+   * Create a TileArrayRasterData by loading all tiles from disk.
+   */
+  def apply(basePath:String, name:String, typ:RasterType, tileLayout:TileLayout, 
+      rasterExtent:RasterExtent, server:Server) = {
+    val rl = tileLayout.getResolutionLayout(rasterExtent)
+    
+    var tiles:List[Raster] = Nil
+    for (r <- 0 until tileLayout.tileRows; c <- 0 until tileLayout.tileCols) {
+      val path = Tiler.tilePath(basePath, name, c, r)
+      tiles = tiles ::: List(server.loadRaster(path))
+    }
+    new TileArrayRasterData(tiles.toArray, tileLayout, rasterExtent)
+  }
+} 
 
 object LazyTiledWrapper {
   def apply(data:RasterData, tileLayout:TileLayout):TiledRasterData = {
@@ -688,7 +710,7 @@ object Tiler {
         pixelRows,
         inputARG,
         outputPath
-      ) 
+      )
       import sys.process._
       val result = cmd !
       val arg = ArgReader.readPath(outputPath,None,None)
