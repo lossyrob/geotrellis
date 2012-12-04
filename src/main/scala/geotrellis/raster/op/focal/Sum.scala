@@ -8,8 +8,8 @@ case class Sum(r:Op[Raster], n:Op[Neighborhood]) extends IntFocalOp[Raster](r,n)
 
   def createBuilder(r:Raster) = new IntRasterBuilder(r.rasterExtent)
 
-  val addedCB = new IntFocalValueCB { def act(v:Int) = { total += v } }
-  val removedCB = new IntFocalValueCB { def act(v:Int) = { total -= v } }
+  val addedCB = new IntFocalValueCB { def apply(v:Int) = { total += v } }
+  val removedCB = new IntFocalValueCB { def apply(v:Int) = { total -= v } }
 
   def calc(cursor:IntCursor) = {
     cursor.addedCells.foreach(addedCB)

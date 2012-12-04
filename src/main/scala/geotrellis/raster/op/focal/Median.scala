@@ -10,7 +10,7 @@ case class Median(r:Op[Raster], n:Op[Neighborhood]) extends IntFocalOp[Raster](r
   def createBuilder(r:Raster) = new IntRasterBuilder(r.rasterExtent)
 
   def getCB(h:FastMapHistogram):IntFocalValueCB = 
-    new IntFocalValueCB { def act(v:Int) = { h.countItem(v,1) } }
+    new IntFocalValueCB { def apply(v:Int) = { h.countItem(v,1) } }
 
   def calc(cursor:IntCursor) = {
     val h = FastMapHistogram()

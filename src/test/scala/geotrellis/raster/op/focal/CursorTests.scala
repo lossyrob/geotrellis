@@ -10,8 +10,8 @@ import org.scalatest.ShouldMatchers
 
 @org.junit.runner.RunWith(classOf[org.scalatest.junit.JUnitRunner])
 class CursorSpec extends FunSpec with ShouldMatchers {
-  val foldLeftCB = new IntFocalFoldCB { def act(a:Int,v:Int) = a + v }
-  val foldLeftMinCB = new IntFocalFoldCB { def act(a:Int,v:Int) = min(a,v) }
+  val foldLeftCB = new IntFocalFoldCB { def apply(a:Int,v:Int) = a + v }
+  val foldLeftMinCB = new IntFocalFoldCB { def apply(a:Int,v:Int) = min(a,v) }
 
   def createRaster:Raster = {
     val arr = (for(i <- 1 to 100) yield i).toArray
@@ -27,7 +27,7 @@ class CursorSpec extends FunSpec with ShouldMatchers {
     center match { 
       case (x,y) =>
         val s = Set[Int]()
-        val cb = new IntFocalValueCB { def act(v:Int) = { s += v } }
+        val cb = new IntFocalValueCB { def apply(v:Int) = { s += v } }
         cursor.centerOn(x,y)
         cursor.move(m)
         set.foreach(cb)
@@ -192,7 +192,7 @@ class CursorSpec extends FunSpec with ShouldMatchers {
                          X0X
                                          """)
       val s = Set[(Int,Int)]()
-      val cb = new IntFocalCellCB { def act(x:Int,y:Int,v:Int) = { s += ((x,y)) } }
+      val cb = new IntFocalCellCB { def apply(x:Int,y:Int,v:Int) = { s += ((x,y)) } }
       // Middle 
       cursor.centerOn(4,4)
       cursor.allCells.foreach(cb)

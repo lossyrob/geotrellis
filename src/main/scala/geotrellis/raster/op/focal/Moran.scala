@@ -24,7 +24,7 @@ case class RasterMoransI(r:Op[Raster],n:Op[Neighborhood]) extends DoubleFocalOp[
     var base = 0.0
 
     val valueCB = new DoubleFocalCellCB { 
-      def act(x:Int,y:Int,v:Double) = {
+      def apply(x:Int,y:Int,v:Double) = {
         if(x == cursor.focusX && y == cursor.focusY) {
           base = v-mean
         } else {
@@ -62,7 +62,7 @@ case class ScalarMoransI(r:Op[Raster], n:Neighborhood) extends Op1(r)({
         var base = diff.getDouble(cursor.focusX,cursor.focusY)
         var z = -base
 
-        val valueCB = new DoubleFocalValueCB { def act(v:Double) = { z += v ; ws += 1 } }
+        val valueCB = new DoubleFocalValueCB { def apply(v:Double) = { z += v ; ws += 1 } }
 
         cursor.allCells.foreach(valueCB)
 
