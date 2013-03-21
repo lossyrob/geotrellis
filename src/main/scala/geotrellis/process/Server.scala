@@ -122,7 +122,7 @@ akka {
   /**
    * Return the appropriate reader object for the given path.
    */
-  def getReader(path:String, layerOpt:Option[RasterLayer]): FileReader = {
+  def getReader(path:String): FileReader = {
     path match {
       case ArgPattern() => ArgReader
       case AsciiPattern() => AsciiReader
@@ -131,7 +131,7 @@ akka {
   }
    
   def getRasterStepOutput(path:String, layerOpt:Option[RasterLayer], reOpt:Option[RasterExtent]) = {
-    val reader = getReader(path, layerOpt)
+    val reader = getReader(path)
     Try(reader.readPath(path, layerOpt, reOpt)) match { 
       case TrySuccess(r) => Result(r)
       case TryFailure(e) =>
@@ -140,12 +140,8 @@ akka {
   }
 
   def getRaster(path:String, layerOpt:Option[RasterLayer], reOpt:Option[RasterExtent]):Raster = {
-    getReader(path, layerOpt).readPath(path, layerOpt, reOpt)  
+    getReader(path).readPath(path, layerOpt, reOpt)  
   }
-
-  // TODO: rewrite calls to loadRaster to getRaster. then remove?
-  def loadRaster(path:String):Raster = getRaster(path, None, None)
-  def loadRaster(path:String, g:RasterExtent):Raster = getRaster(path, None, Option(g))
 
   def getRasterExtentByName(name:String):RasterExtent = {
     catalog.getRasterLayerByName(name) match {
@@ -158,7 +154,7 @@ akka {
     catalog.getRasterLayerByName(name) match {
       case Some(layer) => {
         val path = layer.rasterPath
-        val reader = getReader(path, Some(layer))
+        val reader = getReader(path)
         val r = staticCache.get(layer.name) match {
           case Some(bytes) => reader.readCache(bytes, layer, reOpt)
           case None => reader.readPath(path, Some(layer), reOpt)

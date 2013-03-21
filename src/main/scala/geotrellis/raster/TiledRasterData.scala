@@ -294,7 +294,7 @@ case class TileSetRasterData(basePath:String, name:String, typ:RasterType, tileL
 
   def getTile(col:Int, row:Int) = {
     val path = Tiler.tilePath(basePath, name, col, row)
-    server.loadRaster(path).data match {
+    server.getRaster(path,None,None).data match {
       case i:IntConstant => i
       case a:ArrayRasterData => LazyArrayWrapper(a)
       case o => o
@@ -340,7 +340,7 @@ object TileArrayRasterData {
     var tiles:List[Raster] = Nil
     for (r <- 0 until tileLayout.tileRows; c <- 0 until tileLayout.tileCols) {
       val path = Tiler.tilePath(basePath, name, c, r)
-      tiles = tiles ::: List(server.loadRaster(path))
+      tiles = tiles ::: List(server.getRaster(path,None,None))
     }
     new TileArrayRasterData(tiles.toArray, tileLayout, rasterExtent)
   }

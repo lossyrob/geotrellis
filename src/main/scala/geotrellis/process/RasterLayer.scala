@@ -25,11 +25,11 @@ object RasterLayer {
    * Build a RasterLayer instance given a JSON string.
    */
   def fromJSON(data:String, basePath:String) = {
-    json.RasterLayerParser(data).create(basePath)
+    json.RasterLayerParser(data, basePath)
   }
 }
 
-case class RasterLayer(name:String, typ:String, datatyp:String,
+case class RasterLayer(name:String, typ:String, datatyp:RasterType,
                        basePath:String, rasterExtent:RasterExtent,
                        epsg:Int, xskew:Double, yskew:Double) {
   def jsonPath = basePath + ".json"

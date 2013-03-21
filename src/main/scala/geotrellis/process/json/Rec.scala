@@ -26,15 +26,3 @@ case class DataStoreRec(store:String,
   def create = DataStore(store, params)
   def name = store
 }
-
-case class RasterLayerRec(layer:String, `type`:String, datatype:String, 
-                          xmin:Double, xmax:Double, ymin:Double, ymax:Double, 
-                          cols:Int, rows:Int, cellheight:Double, cellwidth:Double, 
-                          epsg:Int, yskew:Double, xskew:Double) extends Rec[RasterLayer] {
-  def create(basePath:String) = {
-    val extent = Extent(xmin, ymin, xmax, ymax)
-    val rasterExtent = RasterExtent(extent, cellwidth, cellheight, cols, rows)
-    RasterLayer(layer, `type`, datatype, basePath, rasterExtent, epsg, yskew, xskew)
-  }
-  def name = layer
-}
