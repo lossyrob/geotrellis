@@ -43,16 +43,25 @@ extends Serializable {
    * Weight is defined as time taken to traverse the given edge,
    * plus the waiting time for that edge traversal to occur.
    * 
-   * Edges with -2 start time must be in the beginning of the list
-   * of edges to a specific target. Each edge to a specific target
-   * are grouped together, with the edge start time increasing.
-   * There is only one -2 start time edge allowed per target per vertex.
-   * 
    * For example, for edges to vertices 5,6,7, the chain might be:
-   * ... [ 5 | -2 | 100 ] | [ 5 | 3000 | 2000 ] | [ 6 | 1000 | 400 ] |
-         [ 6 | 6000 | 234 ] | [ 7 | -2 | 41204 ] ...
+   * ... [ 5 | 2000 | 100 ] | [ 5 | 3000 | 2000 ] | [ 6 | 1000 | 400 ] |
+         [ 6 | 6000 | 234 ] | [ 7 | 1500 | 41204 ] ...
    */
   val edges = Array.ofDim[Int](edgeCount * 3)
+
+  /**
+   * 'anytimeEdges' is an array of that is indexed based
+   * on the 'vertices' array, and contains two peices
+   * of information about an edge: the target vertex and the weight
+   * of the edge.
+   *
+   * ... [ v | w ] | [ v | w ] | [ v | w ] ...
+   * where v = the connected vertex
+   *       w = weight of traversal
+   * 
+   * Weight is defined as time taken to traverse the given edge
+   */
+  val anytimeEdges = Array.ofDim[Int](vertexCount*2)
 
   /**
    * Given a source vertex, and a time, call a function which takes
@@ -186,8 +195,70 @@ object TransitGraph {
 
     cfor(0)(_ < size, _ + 1) { i =>
       val v = vertices(i)
-      val edgeCount = unpacked.edgeCount(v)
-      if(edgeCount == 0) {
+
+      val anytimeEdges = unpacked.edges(v).filter(_.isAnyTime).toList
+      val anytimeEdgeCount = anytimeEdges.length
+
+      if(anytimeEdgeCount == 0) {
+        // Record empty vertex
+        packed.vertices(i*2) = -1
+        packed.vertices(i*2+1) = 0
+      } else {
+        val v = vertexMap(i)
+
+        // Set the edge index for this vertex
+        packed.vertices(i*2) = edgesIndex
+        // Record the number of edge entries for this vertex
+        packed.vertices(i*2+1) = edgeCount*3
+
+        // Edges need to be sorted first by target and then by the thier start time.
+        val edges = 
+          unpacked.edges(v)
+                  .toSeq
+                  .sortBy { e => (vertexLookup(e.target),e.time.toInt) }
+                  .toList
+ 
+
+        var anyTimeTargets = mutable.Set[Vertex]()
+        var continue = false
+       
+
+        cfor(0)(_ < edgeCount, _ + 1) { i =>
+          val e = edges(i)
+
+          // Does this vertex already have an ANY edge to the target?
+          val alreadyHasAny = anyTimeTargets.contains(e.target)
+          if( !e.time.isAny ||
+              !alreadyHasAny ) {
+            // Record the target as it's integer mapping
+            packed.edges(edgesIndex) = vertexLookup(e.target)
+            edgesIndex += 1
+            // Record the start time of the edge
+            packed.edges(edgesIndex) = e.time.toInt
+            edgesIndex += 1
+            //Record the weight of the edge.
+            packed.edges(edgesIndex) = e.travelTime.toInt
+            edgesIndex += 1
+          }
+          if(e.time.toInt == -2) {
+            // Only allow one anytime edge
+            if(anyTimeTargets.contains(e.target)) {
+              doubleAnies += 1
+            } else { 
+              anyTimeTargets += e.target 
+            }
+          }
+        }
+
+      val timeEdges = 
+        unpacked.edges(v)
+                .filter(!_.isAnyTime)
+                .toSeq
+                .sortBy { e => (vertexLookup(e.target),e.time.toInt) }
+                .toList
+
+      val timeEdgeCount = timeEdges.length
+      if(anytimeEdgeCount == 0) {
         // Record empty vertex
         packed.vertices(i*2) = -1
         packed.vertices(i*2+1) = 0
