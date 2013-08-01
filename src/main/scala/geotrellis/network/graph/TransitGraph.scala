@@ -13,9 +13,12 @@ class TransitGraph(private val vertexMap:Array[Vertex],
                    private val locationToVertex:Map[Location,Int],
                    val edgeCount:Int) 
 extends Serializable {
+  case class TimeDependantEdgeSet(edgeCount:Int) {
+    private val vertex
+  }
 
   /**
-   * 'vertices' is an array that is indexed by vertex id,
+   * 'Vertices' is an array that is indexed by vertex id,
    * that contains two peices of information:
    * the start index of the 'edges' array for
    * a given vertex, and the number of outbound
@@ -50,7 +53,7 @@ extends Serializable {
   val edges = Array.ofDim[Int](edgeCount * 3)
 
   /**
-   * 'anytimeEdges' is an array of that is indexed based
+   * 'walkingEdges' is an array of that is indexed based
    * on the 'vertices' array, and contains two peices
    * of information about an edge: the target vertex and the weight
    * of the edge.
@@ -61,7 +64,7 @@ extends Serializable {
    * 
    * Weight is defined as time taken to traverse the given edge
    */
-  val anytimeEdges = Array.ofDim[Int](vertexCount*2)
+  val walkingEdges = Array.ofDim[Int](vertexCount*2)
 
   /**
    * Given a source vertex, and a time, call a function which takes
@@ -196,8 +199,8 @@ object TransitGraph {
     cfor(0)(_ < size, _ + 1) { i =>
       val v = vertices(i)
 
-      val anytimeEdges = unpacked.edges(v).filter(_.isAnyTime).toList
-      val anytimeEdgeCount = anytimeEdges.length
+      val walkingEdges = unpacked.edges(v).filter(_.isAnyTime).toList
+      val anytimeEdgeCount = walkingEdges.length
 
       if(anytimeEdgeCount == 0) {
         // Record empty vertex
