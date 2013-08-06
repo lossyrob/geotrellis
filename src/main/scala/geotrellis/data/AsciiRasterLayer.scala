@@ -134,7 +134,7 @@ extends RasterLayerBuilder {
 }
 
 class AsciiRasterLayer(info:RasterLayerInfo, noDataValue:Int, rasterPath:String) 
-extends RasterLayer(info) {
+extends UntiledRasterLayer(info) {
   private var cached = false
 
   def getRaster(targetExtent:Option[RasterExtent]) =

@@ -56,6 +56,7 @@ extends RasterLayerBuilder {
                                  getEpsg(json),
                                  getXskew(json),
                                  getYskew(json),
+                                 layout,
                                  getCacheFlag(json))
 
       Some(new TileSetRasterLayer(info,tileDirPath,layout))
