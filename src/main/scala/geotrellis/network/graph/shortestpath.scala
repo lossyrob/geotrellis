@@ -65,8 +65,12 @@ class ShortestPathTree(val startVertex:Int,
   val duration = maxDuration.getOrElse(Duration(Int.MaxValue)).toInt + tripStart
 
   graph.foreachOutgoingEdge(startVertex,tripStart) { (target,weight) =>
-    shortestPathTimes(target) = tripStart + weight
-    queue += target
+    val t = tripStart + weight
+    if(t <= duration) {
+      shortestPathTimes(target) = t
+      queue += target
+      _reachableVertices += target
+    }
   }
 
   while(!queue.isEmpty) {
