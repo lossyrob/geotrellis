@@ -7,7 +7,7 @@ import scala.util.Sorting
 import sys.error
 
 object FastMapHistogram {
-  private final val UNSET:Int = NODATA + 1
+  private final val UNSET:Int = NODATA.int + 1
   private final val SIZE = 16
 
   private def buckets(size:Int) = Array.fill(size * 2)(UNSET)
@@ -17,7 +17,7 @@ object FastMapHistogram {
 
   def fromRaster(r:Raster) = {
     val h = FastMapHistogram()
-    r.foreach(z => if (z != NODATA) h.countItem(z, 1))
+    r.foreach(z => if (z.isNoData) h.countItem(z, 1))
     h
   }
 
@@ -44,7 +44,7 @@ object FastMapHistogram {
   def fromRasterDouble(r:Raster, significantDigits:Int) = {
     val h = FastMapHistogram()
     val multiplier = math.pow(10, significantDigits)
-    r.foreachDouble(z => if (z != Double.NaN) h.countItem( (z * multiplier).toInt, 1))
+    r.foreachDouble(z => if (z.isNoData) h.countItem( (z * multiplier).toInt, 1))
     h
   }
 }
@@ -53,7 +53,7 @@ class FastMapHistogram(_size:Int, _buckets:Array[Int], _used:Int, _total:Int) ex
   if (_size <= 0) error("initializeSize must be > 0")
 
   // we are reserving this value
-  private final val UNSET:Int = NODATA + 1
+  private final val UNSET:Int = NODATA.int + 1
 
   // once our buckets get 60% full, we need to resize
   private final val FACTOR:Double = 0.6

@@ -19,7 +19,7 @@ case class Min(r:Op[Raster],n:Op[Neighborhood],tns:Op[TileNeighbors]) extends Fo
   (r,n) => new CursorCalculation[Raster] with IntRasterDataResult {
     def calc(r:Raster,cursor:Cursor) = {
   
-      var m = NODATA
+      var m = NODATA.int
       cursor.allCells.foreach { 
         (col,row) => {
           val v = r.get(col,row)

@@ -2,18 +2,86 @@ import geotrellis.source.CanBuildSourceFrom
 import geotrellis.statistics.Histogram
 
 package object geotrellis {
-  final val NODATA = Int.MinValue
+  abstract sealed class AbstractNODATA
+  final object NODATA extends AbstractNODATA {
+    @inline final def int = Int.MinValue
+    @inline final def byte = Byte.MinValue
+    @inline final def short = Short.MinValue
+    @inline final def float = Float.NaN
+    @inline final def double = Double.NaN
+  }
+
+  implicit def intNODATA(n:AbstractNODATA) = Int.MinValue
+  implicit def byteNODATA(n:AbstractNODATA) = Byte.MinValue
+  implicit def shortNODATA(n:AbstractNODATA) = Short.MinValue
+  implicit def floatNODATA(n:AbstractNODATA) = Float.NaN
+  implicit def doubleNODATA(n:AbstractNODATA) = Double.NaN
+
+  // final val NODATA = Int.MinValue
+  // final val byteNoData = Byte.MinValue
+  // final val shortNoData = Short.MinValue
+
   @inline def isNaN(d:Double) = java.lang.Double.isNaN(d)
 
-  case class IntNoDataCheck(i:Int) extends AnyVal {
-    @inline final def isNoData = i == NODATA
+  case class RasterByte(v:Byte) extends AnyVal {
+    @inline final def isNoData = v == NODATA.byte
+    @inline final def toRasterShort:Short = if(isNoData) NODATA else v.toShort
+    @inline final def toRasterInt:Int = if(isNoData) NODATA else v.toInt
+    @inline final def toRasterFloat:Float = if(isNoData) NODATA else v.toFloat
+    @inline final def toRasterDouble:Double = if(isNoData) NODATA else v.toDouble
   }
-  implicit def intToNoDataCheck(i:Int) = IntNoDataCheck(i)
+  implicit def byteToRasterByte(v:Byte) = RasterByte(v)
 
-  case class DoubleNoDataCheck(d:Double) extends AnyVal {
-    @inline final def isNoData = isNaN(d)
+  case class RasterShort(v:Short) extends AnyVal {
+    @inline final def isNoData = v == NODATA.short
+    @inline final def toRasterByte:Byte = if(isNoData) NODATA else v.toByte
+    @inline final def toRasterInt:Int = if(isNoData) NODATA else v.toInt
+    @inline final def toRasterFloat:Float = if(isNoData) NODATA else v.toFloat
+    @inline final def toRasterDouble:Double = if(isNoData) NODATA else v.toDouble
   }
-  implicit def doubleToNoDataCheck(d:Double) = DoubleNoDataCheck(d)
+  implicit def shortToRasterShort(v:Short) = RasterShort(v)
+
+  case class RasterInt(v:Int) extends AnyVal {
+    @inline final def isNoData = v == NODATA.int
+    @inline final def toRasterByte:Byte = if(isNoData) NODATA else v.toByte
+    @inline final def toRasterShort:Short = if(isNoData) NODATA else v.toShort
+    @inline final def toRasterFloat:Float = if(isNoData) NODATA else v.toFloat
+    @inline final def toRasterDouble:Double = if(isNoData) NODATA else v.toDouble
+  }
+  implicit def intToRasterInt(v:Int) = RasterInt(v)
+
+  case class RasterFloat(v:Float) extends AnyVal {
+    @inline final def isNoData = java.lang.Float.isNaN(v)
+    @inline final def toRasterByte:Byte = if(isNoData) NODATA else v.toByte
+    @inline final def toRasterShort:Short = if(isNoData) NODATA else v.toShort
+    @inline final def toRasterInt:Int = if(isNoData) NODATA else v.toInt
+    @inline final def toRasterDouble:Double = if(isNoData) NODATA else v.toDouble
+  }
+  implicit def floatToRasterFloat(v:Float) = RasterFloat(v)
+
+  case class RasterDouble(v:Double) extends AnyVal {
+    @inline final def isNoData = java.lang.Double.isNaN(v)
+    @inline final def toRasterByte:Byte = if(isNoData) NODATA else v.toByte
+    @inline final def toRasterShort:Short = if(isNoData) NODATA else v.toShort
+    @inline final def toRasterInt:Int = if(isNoData) NODATA else v.toInt
+    @inline final def toRasterFloat:Float = if(isNoData) NODATA else v.toFloat
+  }
+  implicit def doubleToRasterDouble(v:Double) = RasterDouble(v)
+
+  // case class IntNoDataCheck(i:Int) extends AnyVal {
+  //   @inline final def isNoData = i == NODATA
+  // }
+  // implicit def intToNoDataCheck(i:Int) = IntNoDataCheck(i)
+
+  // case class FloatNoDataCheck(f:Float) extends AnyVal {
+  //   @inline final def isNoData = f == java.lang.Float.isNaN(f)
+  // }
+  // implicit def floatToNoDataCheck(f:Short) = FloatNoDataCheck(f)
+
+  // case class DoubleNoDataCheck(d:Double) extends AnyVal {
+  //   @inline final def isNoData = isNaN(d)
+  // }
+  // implicit def doubleToNoDataCheck(d:Double) = DoubleNoDataCheck(d)
 
   type Op[+A] = Operation[A]
   type DI = DummyImplicit

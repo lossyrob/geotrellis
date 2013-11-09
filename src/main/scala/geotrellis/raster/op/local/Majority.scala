@@ -89,7 +89,7 @@ object Majority extends Serializable {
               val len = sorted.length - 1
               val m =
                 if(len >= level) { sorted(len-level) }
-                else { NODATA }
+                else { NODATA.int }
               data.set(col,row, m)
             }
           }

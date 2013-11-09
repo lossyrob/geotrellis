@@ -83,13 +83,13 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
     self.mapIntersecting(p) { tileIntersection =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
-          var min = NODATA
+          var min = NODATA.int
           r.foreach { (x:Int) => 
             if (!x.isNoData && (x < min || min.isNoData)) { min = x }
           }
           min
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
-          var min = NODATA
+          var min = NODATA.int
           for(p <- polygons.asInstanceOf[List[Polygon[D]]]) {
             Rasterizer.foreachCellByFeature(p, r.rasterExtent)(
               new Callback[Geometry,D] {
@@ -140,11 +140,11 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
     self.mapIntersecting(p) { tileIntersection =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
-          var max = NODATA // == Int.MinValue, so no need to check max.isNoData
+          var max = NODATA.int // == Int.MinValue, so no need to check max.isNoData
           r.foreach((x:Int) => if (!x.isNoData && x > max) { max = x })
           max
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
-          var max = NODATA
+          var max = NODATA.int
           for(p <- polygons.asInstanceOf[List[Polygon[D]]]) {
             Rasterizer.foreachCellByFeature(p, r.rasterExtent)(
               new Callback[Geometry,D] {

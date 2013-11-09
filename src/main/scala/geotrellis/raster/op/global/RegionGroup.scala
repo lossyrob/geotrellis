@@ -21,7 +21,7 @@ extends Op1(r)({
     val data = IntArrayRasterData.empty(cols,rows)
     val ignoreNoData = options.ignoreNoData
     cfor(0)(_ < rows, _ + 1) { row =>
-      var valueToLeft = NODATA
+      var valueToLeft = NODATA.int
       cfor(0)(_ < cols, _ + 1) { col =>
         val v = r.get(col,row)
         if(!v.isNoData || !ignoreNoData) {

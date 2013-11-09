@@ -106,7 +106,7 @@ trait MedianModeCalculation {
   /** Calculates the median. If you use this,
    *  make sure you've been only calling addValueOrdered
    */
-  def median = {
+  def median:Int = {
     if(currArrMax == 0) NODATA else {
       if(currArrMax % 2 == 0) {
        (arr(currArrMax/2) + arr(currArrMax/2-1)) / 2
