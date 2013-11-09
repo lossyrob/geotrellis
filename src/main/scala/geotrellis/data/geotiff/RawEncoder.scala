@@ -5,8 +5,6 @@ import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
-import java.lang.Double.isNaN
-
 import scala.collection.mutable
 import scala.annotation.switch
 
@@ -31,7 +29,7 @@ object RawEncoder {
 class RawByteEncoder(encoder:Encoder) extends RawEncoder(encoder) {
   def handleCell(i:Int) {
     var z = data.apply(i)
-    if (z == NODATA) z = encoder.noDataInt
+    if (z.isNoData) z = encoder.noDataInt
     dmg.writeByte(z)
   }
 }
@@ -39,7 +37,7 @@ class RawByteEncoder(encoder:Encoder) extends RawEncoder(encoder) {
 class RawShortEncoder(encoder:Encoder) extends RawEncoder(encoder) {
   def handleCell(i:Int) {
     var z = data.apply(i)
-    if (z == NODATA) z = encoder.noDataInt
+    if (z.isNoData) z = encoder.noDataInt
     dmg.writeShort(z)
   }
 }
@@ -47,7 +45,7 @@ class RawShortEncoder(encoder:Encoder) extends RawEncoder(encoder) {
 class RawIntEncoder(encoder:Encoder) extends RawEncoder(encoder) {
   def handleCell(i:Int) {
     var z = data.apply(i)
-    if (z == NODATA) z = encoder.noDataInt
+    if (z.isNoData) z = encoder.noDataInt
     dmg.writeInt(z)
   }
 }
@@ -55,16 +53,16 @@ class RawIntEncoder(encoder:Encoder) extends RawEncoder(encoder) {
 class RawFloatEncoder(encoder:Encoder) extends RawEncoder(encoder) {
   val ndf = if (encoder.settings.esriCompat) Float.MinValue else Float.NaN
   def handleCell(i:Int) {
-    var z = i2d(data(i))
-    dmg.writeFloat(if (isNaN(z)) ndf else z.toFloat)
+    var z = data(i).toRasterDouble
+    dmg.writeFloat(if (z.isNoData) ndf else z.toFloat)
   }
 }
 
 class RawDoubleEncoder(encoder:Encoder) extends RawEncoder(encoder) {
   val ndf = if (encoder.settings.esriCompat) Double.MinValue else Double.NaN
   def handleCell(i:Int) {
-    var z = i2d(data(i))
-    dmg.writeDouble(if (isNaN(z)) ndf else z)
+    var z = data(i).toRasterDouble
+    dmg.writeDouble(if (z.isNoData) ndf else z)
   }
 }
 

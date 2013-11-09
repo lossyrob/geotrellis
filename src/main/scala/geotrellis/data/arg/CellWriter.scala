@@ -70,7 +70,7 @@ trait IntCellWriter extends CellWriter {
   def writeValue(z:Int, dos:DataOutputStream): Unit
   @inline final def writeCell(raster:Raster, col:Int, row:Int, cols:Int, dos:DataOutputStream) {
     val z = raster.get(col, row)
-    if (z == NODATA) writeValue(noDataValue, dos) else writeValue(z, dos)
+    if (z.isNoData) writeValue(noDataValue, dos) else writeValue(z, dos)
   }
 }
 
@@ -82,17 +82,17 @@ trait FloatCellWriter extends CellWriter {
 }
 
 object Int8CellWriter extends IntCellWriter {
-  @inline final def noDataValue = Byte.MinValue
+  @inline final def noDataValue = NODATA.byte
   @inline final def writeValue(z:Int, dos:DataOutputStream) { dos.writeByte(z) }
 }
 
 object Int16CellWriter extends IntCellWriter {
-  @inline final def noDataValue = Short.MinValue
+  @inline final def noDataValue = NODATA.short
   @inline final def writeValue(z:Int, dos:DataOutputStream) { dos.writeShort(z) }
 }
 
 object Int32CellWriter extends IntCellWriter {
-  @inline final def noDataValue = Int.MinValue
+  @inline final def noDataValue = NODATA.int
   @inline final def writeValue(z:Int, dos:DataOutputStream) { dos.writeInt(z) }
 }
 

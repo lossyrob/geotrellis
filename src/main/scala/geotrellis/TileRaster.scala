@@ -16,7 +16,6 @@ object TileRaster {
         tr
       case _ =>
         wrap(r, tileLayout)
-//        sys.error(s"TileRaster cannot handle this raster type (${r.getClass.getSimpleName})")
     }
 
   def wrap(r:Raster,tileLayout:TileLayout):TileRaster = {
@@ -226,7 +225,7 @@ case class TileRaster(tiles:Seq[Raster],
 
           for(col <- 0 until tileLayout.pixelCols) {
             val v = tile.get(col,row)
-            val s = if(v == NODATA) {
+            val s = if(v.isNoData) {
               "ND"
             } else {
               s"$v"
