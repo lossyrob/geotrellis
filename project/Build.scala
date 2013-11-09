@@ -13,6 +13,7 @@ object GeotrellisBuild extends Build {
     
     scalacOptions ++= Seq("-deprecation", 
                           "-unchecked", 
+                          "-Yinline-warnings",
                           "-Yclosure-elim",
                           "-optimize", 
                           "-language:implicitConversions", 

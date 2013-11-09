@@ -11,11 +11,11 @@ import geotrellis.source._
  */
 object Min extends LocalRasterBinaryOp {
   def combine(z1:Int,z2:Int) =
-    if (z1 == NODATA || z2 == NODATA) NODATA
+    if (z1.isNoData || z2.isNoData) NODATA
     else math.min(z1,z2)
 
   def combine(z1:Double,z2:Double) =
-    if (isNaN(z1) || isNaN(z2)) Double.NaN
+    if (z1.isNoData || z2.isNoData) Double.NaN
     else math.min(z1,z2)
 }
 

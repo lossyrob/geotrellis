@@ -12,7 +12,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
           val histogram = FastMapHistogram()
-          r.foreach((z:Int) => if (z != NODATA) histogram.countItem(z, 1))
+          r.foreach((z:Int) => if (!z.isNoData) histogram.countItem(z, 1))
           histogram
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           val histogram = FastMapHistogram()
@@ -21,7 +21,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply (col:Int, row:Int, g:Geometry[D]) {
                   val z = r.get(col,row)
-                  if (z != NODATA) histogram.countItem(z, 1)
+                  if (!z.isNoData) histogram.countItem(z, 1)
                 }
               }
             )
@@ -36,7 +36,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
           var s = 0L
-          r.foreach((x:Int) => if (x != NODATA) s = s + x)
+          r.foreach((x:Int) => if (!x.isNoData) s = s + x)
           s
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var sum: Long = 0L
@@ -45,7 +45,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.get(col,row)
-                  if (z != NODATA) { sum = sum + z }
+                  if (!z.isNoData) { sum = sum + z }
                 }
               }
             )
@@ -60,7 +60,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
           var s = 0.0
-          r.foreachDouble((x:Double) => if (!isNaN(x)) s = s + x)
+          r.foreachDouble((x:Double) => if (!x.isNoData) s = s + x)
           s
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var sum = 0.0
@@ -69,7 +69,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.getDouble(col,row)
-                  if(!isNaN(z)) { sum = sum + z }
+                  if(!z.isNoData) { sum = sum + z }
                 }
               }
             )
@@ -85,7 +85,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
         case FullTileIntersection(r:Raster) =>
           var min = NODATA
           r.foreach { (x:Int) => 
-            if (x != NODATA && (x < min || min == NODATA)) { min = x }
+            if (!x.isNoData && (x < min || min.isNoData)) { min = x }
           }
           min
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
@@ -95,7 +95,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.get(col,row)
-                  if (z != NODATA && (z < min || min == NODATA) ) { min = z }
+                  if (!z.isNoData && (z < min || min.isNoData) ) { min = z }
                 }
               }
             )
@@ -103,8 +103,8 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
           min
       }
     }.reduce { (a,b) => 
-      if(a == NODATA) { b } 
-      else if(b == NODATA) { a }
+      if(a.isNoData) { b } 
+      else if(b.isNoData) { a }
       else { math.min(a,b) }
     }
 
@@ -113,7 +113,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
           var min = Double.NaN
-          r.foreach((x:Int) => if (!isNaN(x) && (x < min || isNaN(min))) { min = x })
+          r.foreach((x:Int) => if (!x.isNoData && (x < min || min.isNoData)) { min = x })
           min
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var min = Double.NaN
@@ -122,7 +122,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.getDouble(col,row)
-                  if (!isNaN(z) && (z < min || isNaN(min))) { min = z }
+                  if (!z.isNoData && (z < min || min.isNoData)) { min = z }
                 }
               }
             )
@@ -131,8 +131,8 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
           min
       }
     }.reduce { (a,b) => 
-      if(isNaN(a)) { b } 
-      else if(isNaN(b)) { a }
+      if(a.isNoData) { b } 
+      else if(b.isNoData) { a }
       else { math.min(a,b) }
     }
 
@@ -140,8 +140,8 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
     self.mapIntersecting(p) { tileIntersection =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
-          var max = NODATA // == Int.MinValue
-          r.foreach((x:Int) => if (x != NODATA && x > max) { max = x })
+          var max = NODATA // == Int.MinValue, so no need to check max.isNoData
+          r.foreach((x:Int) => if (!x.isNoData && x > max) { max = x })
           max
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var max = NODATA
@@ -150,7 +150,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.get(col,row)
-                  if (z != NODATA && (z > max || max == NODATA)) { max = z }
+                  if (!z.isNoData && z > max) { max = z }
                 }
               }
             )
@@ -158,8 +158,8 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
           max
       }
     }.reduce { (a,b) => 
-      if(a == NODATA) { b } 
-      else if(b == NODATA) { a }
+      if(a.isNoData) { b } 
+      else if(b.isNoData) { a }
       else { math.max(a,b) }
     }
 
@@ -168,7 +168,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
       tileIntersection match {
         case FullTileIntersection(r:Raster) =>
           var max = Double.NaN
-          r.foreach((x:Int) => if (!isNaN(x) && (x > max || isNaN(max))) { max = x })
+          r.foreach((x:Int) => if (!x.isNoData && (x > max || max.isNoData)) { max = x })
           max
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var max = Double.NaN
@@ -177,7 +177,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.getDouble(col,row)
-                  if (!isNaN(z) && (z > max || isNaN(max))) { max = z }
+                  if (!z.isNoData && (z > max || max.isNoData)) { max = z }
                 }
               }
             )
@@ -185,8 +185,8 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
           max
       }
     }.reduce { (a,b) => 
-      if(isNaN(a)) { b } 
-      else if(isNaN(b)) { a }
+      if(a.isNoData) { b } 
+      else if(b.isNoData) { a }
       else { math.max(a,b) }
     }
 
@@ -196,7 +196,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
         case FullTileIntersection(r:Raster) =>
           var s = 0L
           var c = 0L
-          r.foreach((x:Int) => if (x != NODATA) { s = s + x; c = c + 1 })
+          r.foreach((x:Int) => if (!x.isNoData) { s = s + x; c = c + 1 })
           Mean(s,c)
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var sum: Long = 0L
@@ -206,7 +206,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.get(col,row)
-                  if (z != NODATA) { sum = sum + z; count = count + 1 }
+                  if (!z.isNoData) { sum = sum + z; count = count + 1 }
                 }
               }
             )
@@ -222,7 +222,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
         case FullTileIntersection(r:Raster) =>
           var s = 0.0
           var c = 0L
-          r.foreachDouble((x:Double) => if (!isNaN(x)) { s = s + x; c = c + 1 })
+          r.foreachDouble((x:Double) => if (!x.isNoData) { s = s + x; c = c + 1 })
           Mean(s,c)
         case PartialTileIntersection(r:Raster,polygons:List[_]) =>
           var sum = 0.0
@@ -232,7 +232,7 @@ trait ZonalSummaryOpMethods[+Repr <: RasterSource] { self:Repr =>
               new Callback[Geometry,D] {
                 def apply(col:Int, row:Int, g:Geometry[D]) {
                   val z = r.getDouble(col,row)
-                  if (!isNaN(z)) { sum = sum + z; count = count + 1 }
+                  if (!z.isNoData) { sum = sum + z; count = count + 1 }
                 }
               }
             )

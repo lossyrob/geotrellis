@@ -45,7 +45,7 @@ object FlowDirection {
       map.filter { case(_,(col,row)) =>
             0 <= col && col < ncols &&
             0 <= row && row < nrows &&
-        raster.get(col,row) != NODATA
+        !raster.get(col,row).isNoData
       }.map { case (k,v) => k -> (center-raster.get(v._1,v._2)) / distances(k) }
   }
 
@@ -79,7 +79,7 @@ case class FlowDirection(raster:Op[Raster]) extends Op1(raster)({
     while (r < nrows) {
       var c = 0
       while (c < ncols) {
-        if (raster.get(c,r) == NODATA || (FlowDirection.isSink(c,r,raster))) {
+        if (raster.get(c,r).isNoData || (FlowDirection.isSink(c,r,raster))) {
           data.set(c,r,NODATA)
         } else {
           data.set(c,r,FlowDirection.flow(c,r,raster))

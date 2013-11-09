@@ -32,13 +32,13 @@ class CursorModeCalc(extent:Int) extends CursorCalculation[Raster] with IntRaste
   def calc(r:Raster,cursor:Cursor) = {
     cursor.removedCells.foreach { (x,y) =>
       val v = r.get(x,y)
-      if(v != NODATA) {
+      if(!v.isNoData) {
         removeValue(v)
       }
     }
     cursor.addedCells.foreach { (x,y) =>
       val v = r.get(x,y)
-      if(v != NODATA) addValue(v)
+      if(!v.isNoData) addValue(v)
     }
     data.set(cursor.col,cursor.row,mode)
   }
@@ -50,17 +50,17 @@ class CellwiseModeCalc(extent:Int) extends CellwiseCalculation[Raster] with IntR
 
   def add(r:Raster, x:Int, y:Int) = {
     val v = r.get(x,y)
-    if (v != NODATA) {
+    if (!v.isNoData) {
       addValue(v)
     }
   }
 
   def remove(r:Raster, x:Int, y:Int) = {
     val v = r.get(x,y)
-    if (v != NODATA) {
+    if (!v.isNoData) {
       removeValue(v)
     }
   } 
 
-  def setValue(x:Int,y:Int) = { data.setDouble(x,y,mode) }
+  def setValue(x:Int,y:Int) = { data.set(x,y,mode) }
 }

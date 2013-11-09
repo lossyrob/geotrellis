@@ -12,7 +12,7 @@ import geotrellis.process._
 object Not extends Serializable {
   /** Returns the bitwise negation of each cell value. */
   def apply(r:Op[Raster]) = 
-    r.map(_.map { z => if(z == NODATA) z else ~z })
+    r.map(_.map { z => if(z.isNoData) z else ~z })
      .withName("Not[Raster]")
 }
 

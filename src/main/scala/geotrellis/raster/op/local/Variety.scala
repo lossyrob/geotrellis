@@ -36,7 +36,7 @@ object Variety extends Serializable {
             val variety =
               rs.map(r => r.get(col,row))
                 .toSet
-                .filter(_ != NODATA)
+                .filter(!_.isNoData)
                 .size
             data.set(col,row,
               if(variety == 0) { NODATA } else { variety })

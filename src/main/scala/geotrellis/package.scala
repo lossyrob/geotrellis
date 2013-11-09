@@ -3,6 +3,17 @@ import geotrellis.statistics.Histogram
 
 package object geotrellis {
   final val NODATA = Int.MinValue
+  @inline def isNaN(d:Double) = java.lang.Double.isNaN(d)
+
+  case class IntNoDataCheck(i:Int) extends AnyVal {
+    @inline final def isNoData = i == NODATA
+  }
+  implicit def intToNoDataCheck(i:Int) = IntNoDataCheck(i)
+
+  case class DoubleNoDataCheck(d:Double) extends AnyVal {
+    @inline final def isNoData = isNaN(d)
+  }
+  implicit def doubleToNoDataCheck(d:Double) = DoubleNoDataCheck(d)
 
   type Op[+A] = Operation[A]
   type DI = DummyImplicit
@@ -12,8 +23,6 @@ package object geotrellis {
   type RasterDS = geotrellis.source.RasterSource
   type SeqDS[E] = geotrellis.source.DataSource[E,Seq[E]]
   type HistogramDS = geotrellis.source.DataSource[Histogram,Histogram]
-
-  @inline def isNaN(d:Double) = java.lang.Double.isNaN(d)
 
   /**
    * Add simple syntax for creating an operation.

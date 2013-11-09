@@ -175,13 +175,13 @@ trait Raster {
 
   def mapIfSet(f:Int => Int):Raster =
     map { i =>
-      if(i == NODATA) i
+      if(i.isNoData) i
       else f(i)
     }
 
   def mapIfSetDouble(f:Double => Double):Raster = 
     mapDouble { d =>
-      if(isNaN(d)) d
+      if(d.isNoData) d
       else f(d)
     }
 
@@ -240,7 +240,7 @@ trait Raster {
     var zmax = Int.MinValue
 
     foreach { 
-      z => if (z != NODATA) {
+      z => if (!z.isNoData) {
         zmin = math.min(zmin, z)
         zmax = math.max(zmax, z)
       }
@@ -258,8 +258,8 @@ trait Raster {
     var zmax = Double.NaN
 
     foreachDouble {
-      z => if (!java.lang.Double.isNaN(z)) {
-        if(java.lang.Double.isNaN(zmin)) {
+      z => if (!z.isNoData) {
+        if(zmin.isNoData) {
           zmin = z
           zmax = z
         } else {
@@ -280,7 +280,7 @@ trait Raster {
     for(row <- 0 until rows) {
       for(col <- 0 until cols) {
         val v = get(col,row)
-        val s = if(v == NODATA) {
+        val s = if(v.isNoData) {
           "ND"
         } else {
           s"$v"
@@ -302,7 +302,7 @@ trait Raster {
     for (row <- rowMin to rowMax) {
       for (col <- colMin to colMax) {
         val z = this.get(row, col)
-        if (z == NODATA) {
+        if (z.isNoData) {
           s += ".."
         } else {
           s += "%02X".format(z)

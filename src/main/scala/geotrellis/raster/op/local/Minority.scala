@@ -43,7 +43,7 @@ object Minority extends Serializable {
               counts.clear
               for(r <- rs) {
                 val v = r.getDouble(col,row)
-                if(!isNaN(v)) {
+                if(!v.isNoData) {
                   if(!counts.contains(v)) {
                     counts(v) = 1
                   } else {
@@ -72,7 +72,7 @@ object Minority extends Serializable {
               counts.clear
               for(r <- rs) {
                 val v = r.get(col,row)
-                if(v != NODATA) {
+                if(!v.isNoData) {
                   if(!counts.contains(v)) {
                     counts(v) = 1
                   } else {

@@ -34,13 +34,13 @@ class CursorMedianCalc(extent:Int) extends CursorCalculation[Raster] with IntRas
   def calc(r:Raster,cursor:Cursor) = {
     cursor.removedCells.foreach { (x,y) =>
       val v = r.get(x,y)
-      if(v != NODATA) {
+      if(!v.isNoData) {
         removeValue(v)
       }
     }
     cursor.addedCells.foreach { (x,y) =>
       val v = r.get(x,y)
-      if(v != NODATA) addValueOrdered(v)
+      if(!v.isNoData) addValueOrdered(v)
     }
     data.set(cursor.col,cursor.row,median)
   }
@@ -52,14 +52,14 @@ class CellwiseMedianCalc(extent:Int) extends CellwiseCalculation[Raster] with In
 
   def add(r:Raster, x:Int, y:Int) = {
     val v = r.get(x,y)
-    if (v != NODATA) {
+    if (!v.isNoData) {
       addValueOrdered(v)
     }
   }
 
   def remove(r:Raster, x:Int, y:Int) = {
     val v = r.get(x,y)
-    if (v != NODATA) {
+    if (!v.isNoData) {
       removeValue(v)
     }
   } 
