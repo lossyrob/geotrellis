@@ -12,7 +12,3 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) {
     case _ => MergeStrategy.first
   }
 }
-
-scalaVersion := "2.10.2"
-
-libraryDependencies += "com.nativelibs4java" %% "scalaxy-loops" % "0.3-SNAPSHOT" % "provided"
