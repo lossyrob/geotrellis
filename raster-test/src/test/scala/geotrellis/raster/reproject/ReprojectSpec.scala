@@ -119,5 +119,30 @@ class ReprojectSpec extends FunSpec
         }
       }
     }
+
+    it("should match ") {
+      val (source, extent, _) =
+        GeoTiffReader("raster-test/data/reproject/jobs-ll.tif").read.imageDirectories.head.toRaster
+      val (expected, expectedExtent, _) =
+        GeoTiffReader("raster-test/data/reproject/jobs-wm.tif").read.imageDirectories.head.toRaster
+      val (actual, actualExtent) =
+        source.reproject(extent, LatLng, WebMercator)
+
+      actual.rows should be (expected.rows)
+      actual.cols should be (expected.cols)
+
+      actualExtent.xmin should be (expectedExtent.xmin +- 0.00001)
+      actualExtent.xmax should be (expectedExtent.xmax +- 0.00001)
+      actualExtent.ymax should be (expectedExtent.ymax +- 0.00001)
+      actualExtent.ymin should be (expectedExtent.ymin +- 0.00001)
+
+      cfor(0)(_ < actual.rows-1, _ + 1) { row =>
+        cfor(0)(_ < actual.cols-1, _ + 1) { col =>
+          withClue(s"Failed on ($col, $row): ") {
+            actual.getDouble(col, row) should be (expected.getDouble(col, row))
+          }
+        }
+      }
+    }
   }
 }
