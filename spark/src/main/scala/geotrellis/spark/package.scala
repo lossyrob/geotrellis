@@ -57,7 +57,6 @@ package object spark {
       (key |-> _temporalComponent set(temporalKey))
   }
 
-  type ProjectedExtent = (Extent, CRS)
   type Dimensions = (Int, Int)
   type TileBounds = GridBounds
 
