@@ -57,7 +57,7 @@ object Pyramid {
       rdd
         .map { case (key, tile: Tile) =>
           val extent = metaData.mapTransform(key)
-          val newSpatialKey = metaData.mapTransform(extent.xmin, extent.ymax)
+          val newSpatialKey = nextMetaData.mapTransform(extent.xmin, extent.ymax)
           (newSpatialKey, (key, extent.xmin, extent.ymax, tile))
          }
         .combineByKey(createTiles, mergeTiles1, mergeTiles2)
