@@ -4,6 +4,7 @@ import geotrellis.raster._
 import geotrellis.raster.op.local._
 import geotrellis.spark._
 import org.apache.spark.rdd.PairRDDFunctions
+import geotrellis.raster.stats._
 
 import scala.reflect.ClassTag
 
@@ -21,4 +22,12 @@ object BinSum {
     val bins = rdd.mapTiles{ case (key, tile) => keyBin(key) -> tile.convert(cellType)}
     new PairRDDFunctions(bins).reduceByKey{ (t1, t2) => t1.localAdd(t2) }
   }  
+}
+
+object Histogram {
+  def apply[K: ClassTag](rdd: RasterRDD[K]): Histogram = {
+    rdd
+      .map{ case (key, tile) => tile.histogram }
+      .reduce { (h1, h2) => FastMapHistogram.fromHistograms(Array(h1,h2)) }
+  }
 }
