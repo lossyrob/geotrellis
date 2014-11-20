@@ -87,7 +87,7 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
                 case Some(breaks) =>
                   tile.renderPng(ColorRamps.BlueToOrange, breaks.split(",").map(_.toInt)).bytes
                 case None =>
-                  tile.renderPng(ColorRamps.BlueToOrange).bytes  
+                  tile.renderPng.bytes  
               }              
             }
           }
