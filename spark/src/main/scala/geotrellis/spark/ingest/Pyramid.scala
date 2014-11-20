@@ -53,19 +53,29 @@ object Pyramid {
     def mergeTiles2(tiles1: Seq[(K, Double, Double, Tile)], tiles2: Seq[(K, Double, Double, Tile)]): Seq[(K, Double, Double, Tile)] =
       tiles1 ++ tiles2
   
-    val nextRdd: RDD[(K, Tile)] =
+    val firstMap =
       rdd
         .map { case (key, tile: Tile) =>
           val extent = metaData.mapTransform(key)
           val newSpatialKey = nextMetaData.mapTransform(extent.xmin, extent.ymax)
           (newSpatialKey, (key, extent.xmin, extent.ymax, tile))
          }
+
+    println(s"------------${nextLevel}-------------------------------------------------------")
+    println(s"FIRST MAP ${firstMap.count}")
+
+    val combined =
+      firstMap
         .combineByKey(createTiles, mergeTiles1, mergeTiles2)
-        .map { case (spatialKey: SpatialKey, seq: Seq[(K, Double, Double, Tile)]) =>
+
+    println(s"COMBINED ${combined.count}")
+
+    val nextRdd: RDD[(K, Tile)] =
+        combined.map { case (spatialKey: SpatialKey, seq: Seq[(K, Double, Double, Tile)]) =>
           val key = seq.head._1
           val orderedTiles = 
             seq
-              .sortBy { case (_, x, y, _) => (x, -y) }
+              .sortBy { case (_, x, y, _) => (-y, x) }
               .map { case (_, _, _, tile) => tile }
 
           val (xs, ys) =
@@ -90,6 +100,7 @@ object Pyramid {
           (newKey, warped)
         }
 
+    println(nextLevel, nextRdd.count)
     new RasterRDD(nextRdd, nextMetaData) -> nextLevel
   }
 }
