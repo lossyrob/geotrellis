@@ -370,6 +370,7 @@ object GeotrellisBuild extends Build {
     Seq(
       name := "geotrellis-spark",
       fork := true,
+      mainClass in (Compile, run) := Some("climate.cmd.AccumuloIngestCommand"),
       parallelExecution in Test := false,
       javaOptions ++= List(
         "-Xmx8G",

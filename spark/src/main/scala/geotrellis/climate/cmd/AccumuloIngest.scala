@@ -9,6 +9,7 @@ import geotrellis.spark.io.hadoop.formats._
 
 import org.apache.accumulo.core.client.security.tokens.PasswordToken
 import org.apache.spark._
+import org.apache.spark.rdd._
 import com.quantifind.sumac.ArgMain
 
 object AccumuloIngestCommand extends ArgMain[AccumuloIngestArgs] with Logging {
@@ -20,8 +21,10 @@ object AccumuloIngestCommand extends ArgMain[AccumuloIngestArgs] with Logging {
 
     implicit val sparkContext = args.sparkContext("Ingest")
 
+//    implicit netCdfBandOrdering = 
+
     val accumulo = AccumuloInstance(args.instance, args.zookeeper, args.user, new PasswordToken(args.password))
-    val source = sparkContext.netCdfRDD(args.inPath)
+    val source = sparkContext.netCdfRDD(args.inPath).repartition(12)//.sortByKey(true, 12)
 
     val layoutScheme = ZoomedLayoutScheme(256)
     val (level, rdd) =  Ingest[NetCdfBand, SpaceTimeKey](source, args.destCrs, layoutScheme)

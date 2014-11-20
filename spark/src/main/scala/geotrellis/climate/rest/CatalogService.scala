@@ -90,18 +90,13 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
           accumulo.metaDataCatalog.fetchAll.mapValues(_._1).toSeq.map {
             case (layer, md) =>              
               val center = md.extent.reproject(md.crs, LatLng).center
-              var bands = {
-                val GridBounds(col, row, _, _) = md.mapTransform(md.extent)
-                val filters = new FilterSet[SpaceTimeKey]() withFilter SpaceFilter(GridBounds(col, row, col, row))
-                catalog.load(layer, filters).map { // into Try
-                  _.map { case (key, tile) => key.temporalKey.time.toString }
-                }
-              }.get.collect
+
+
               JsObject(
                 "layer" -> layer.toJson,
                 "metaData" -> md.toJson,
-                "center" -> List(center.x, center.y).toJson,
-                "bands" -> JsObject("time" -> bands.toJson))
+                "center" -> List(center.x, center.y).toJson
+              )
           }
         }
       }
@@ -112,7 +107,7 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
       pathPrefix("tms") { tmsRoute }
   }
 
-  startServer(interface = "localhost", port = 8080) {
+  startServer(interface = "172.31.13.123", port = 8080) {
     get(pingPong ~ root)
   }
 }
