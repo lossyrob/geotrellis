@@ -36,6 +36,15 @@ trait AccumuloDriver[K] {
       // Create table if it doesn't exist.
       if (! accumulo.connector.tableOperations().exists(table)) 
         accumulo.connector.tableOperations().create(table)
+      
+      val gridBounds = raster.metaData.mapTransform(raster.metaData.extent)
+      val splitCoords = gridBounds.coords.grouped(12).map { seq => seq.head }
+      val splits = 
+        splitCoords.map { splitCoord =>
+          new Text(f"${layerId.zoom}%02d_${splitCoord._1}%06d_${splitCoord._2}%06d")
+        }
+
+      accumulo.connector.tableOperations().addSplits(table, new java.util.TreeSet(splits.toSeq))
 
       val job = Job.getInstance(sc.hadoopConfiguration)
       accumulo.setAccumuloConfig(job)
