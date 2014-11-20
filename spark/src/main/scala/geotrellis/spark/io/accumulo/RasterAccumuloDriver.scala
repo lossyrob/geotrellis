@@ -47,8 +47,8 @@ object RasterAccumuloDriver extends AccumuloDriver[SpatialKey] {
 
   def setZoomBounds(job: Job, layerId: LayerId): Unit = {
     val range = new ARange(
-      new Text(s"${layerId.zoom}"),
-      new Text(s"${layerId.zoom+1}")
+      new Text(f"${layerId.zoom}%02d"),
+      new Text(f"${layerId.zoom+1}%02d")
     ) :: Nil
 
     InputFormatBase.setRanges(job, range)

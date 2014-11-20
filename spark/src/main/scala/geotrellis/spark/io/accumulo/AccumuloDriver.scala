@@ -10,6 +10,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import scala.util.{Failure, Try}
+import scala.collection.JavaConversions._
 
 class TableNotFoundError(table: String) extends Exception(s"Target Accumulo table `$table` does not exist.")
 
