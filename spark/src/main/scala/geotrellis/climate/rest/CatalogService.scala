@@ -73,14 +73,14 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
                     .withFilter(SpaceFilter(GridBounds(x, y, x, y)))
                     .withFilter(TimeFilter(dt, dt))
 
-                  val rdd = catalog.load[SpaceTimeKey](LayerId(layer, zoom), filters)
-                  rdd.get.first().tile
+                  val rdd = catalog.load[SpaceTimeKey](LayerId(layer, zoom), filters).get
+                  rdd.first().tile
                 case None =>
                   val filters = FilterSet[SpatialKey]() 
                     .withFilter(SpaceFilter(GridBounds(x, y, x, y)))
 
-                  val rdd = catalog.load[SpatialKey](LayerId(layer, zoom), filters)
-                  rdd.get.first().tile
+                  val rdd = catalog.load[SpatialKey](LayerId(layer, zoom), filters).get
+                  rdd.first().tile
               }
 
               breaksOption match {
@@ -95,36 +95,55 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
       }
     }
 
+  var cachedCatalog: Option[Seq[JsObject]] = None
+
   def catalogRoute = cors {
     path("") {
       get {
         // get the entire catalog
         complete {
           import DefaultJsonProtocol._
+       
+          val layer = LayerId("CLIMATE", 2)	
+	  cachedCatalog match {
+	    case None =>
+	    cachedCatalog = Some(
+//          accumulo.metaDataCatalog.fetchAll.mapValues(_._1).toSeq.map {
 
-          accumulo.metaDataCatalog.fetchAll.mapValues(_._1).toSeq.map {
-            case (layer, md) =>                          
+	    Seq(accumulo.metaDataCatalog.load(layer).get._1).map {
+            case  md =>                          
               val center = md.extent.reproject(md.crs, LatLng).center
-              val breaks = {
+              val breaksOpt = {
                 (if (layer.name == "NLCD") {
 		  val rdd = catalog.load[SpatialKey](layer).get
-		  rdd.count
-//		  println(s"COUNT!!!!!! ${rdd.count} $layer")
-//                  Histogram(rdd)
+		  if(rdd.mapPartitions(iter => Iterator(iter.hasNext)).reduce(_||_))
+ 		    Some(Histogram(rdd).getQuantileBreaks(12))
+		  else
+		    None
                 } else {
 		  val rdd = catalog.load[SpaceTimeKey](layer).get
-//                  Histogram(rdd)
-		  rdd.count
-                })//.getQuantileBreaks(12)
+		  if(rdd.mapPartitions(iter => Iterator(iter.hasNext)).reduce(_||_))
+                    Some(Histogram(rdd).getQuantileBreaks(12))
+                  else
+                    None
+                })
               }
-              JsObject(
-                "layer" -> layer.toJson,
-                "metaData" -> md.toJson,
-                "center" -> List(center.x, center.y).toJson,
-                "breaks" -> breaks.toJson
-              )
-          }
+
+              breaksOpt match {
+               case Some(breaks) =>
+                Some(JsObject(
+                  "layer" -> layer.toJson,
+                  "metaData" -> md.toJson,
+                  "center" -> List(center.x, center.y).toJson,
+                  "breaks" -> breaks.toJson
+                ))
+               case None => None
+              }
+          }.flatten)
+           cachedCatalog.get
+          case Some(cc) => cc
         }
+       }
       }
     } ~ 
     pathPrefix(Segment / IntNumber) { (name, zoom) =>      
@@ -159,6 +178,7 @@ object CatalogService extends ArgApp[TmsArgs] with SimpleRoutingApp with SprayJs
       }
     }
   }
+
   def root = {
     pathPrefix("catalog") { catalogRoute } ~
       pathPrefix("tms") { tmsRoute }

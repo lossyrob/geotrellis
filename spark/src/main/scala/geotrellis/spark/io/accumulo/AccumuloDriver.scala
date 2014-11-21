@@ -32,20 +32,35 @@ trait AccumuloDriver[K] {
 
   /** NOTE: Accumulo will always perform destructive update, clobber param is not followed */
   def save(sc: SparkContext, accumulo: AccumuloInstance)
-          (layerId: LayerId, raster: RasterRDD[K], table: String, clobber: Boolean): Try[Unit] =
+          (layerId: LayerId, raster: RasterRDD[K], table: String, clobber: Boolean): Try[Unit] = {
+      println("HERE")
     Try {
       // Create table if it doesn't exist.
       if (! accumulo.connector.tableOperations().exists(table)) 
         accumulo.connector.tableOperations().create(table)
       
+      println("HERE2")
+
       val gridBounds = raster.metaData.mapTransform(raster.metaData.extent)
       val splitCoords = gridBounds.coords.grouped(12).map { seq => seq.head }
-      val splits = 
-        splitCoords.map { splitCoord =>
+      val fullSplits = 
+        (splitCoords.map { splitCoord =>
           new Text(f"${layerId.zoom}%02d_${splitCoord._1}%06d_${splitCoord._2}%06d")
+        }).toList
+
+      def skip[A](l:List[A], n:Int) =		
+         l.zipWithIndex.collect {case (e,i) if ((i+1) % n) == 0 => e}
+
+      println("HERE2.5")
+
+      val sk = fullSplits.size / 100
+
+      println("HERE3")
+      if(sk > 0) {
+         val splits = skip(fullSplits, sk)
+           	       accumulo.connector.tableOperations().addSplits(table, new java.util.TreeSet(splits.toSeq))
         }
 
-      accumulo.connector.tableOperations().addSplits(table, new java.util.TreeSet(splits.toSeq))
 
       val job = Job.getInstance(sc.hadoopConfiguration)
       accumulo.setAccumuloConfig(job)
@@ -53,4 +68,5 @@ trait AccumuloDriver[K] {
       AccumuloOutputFormat.setDefaultTableName(job, table)
       encode(layerId, raster).saveAsNewAPIHadoopFile(accumulo.instanceName, classOf[Text], classOf[Mutation], classOf[AccumuloOutputFormat], job.getConfiguration)
     }
+  }
 }

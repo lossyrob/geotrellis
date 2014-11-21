@@ -1,7 +1,7 @@
 package geotrellis.spark.ingest
 
 import geotrellis.spark._
-import geotrellis.spark.cmd.args.AccumuloArgs
+import geotrellis.spark.cmd.args._
 import geotrellis.spark.io.hadoop._
 import geotrellis.spark.io.accumulo._
 import geotrellis.spark.tiling._
@@ -44,5 +44,37 @@ object AccumuloIngestCommand extends ArgMain[AccumuloIngestArgs] with Logging {
     } else{
       save(rdd, level).get
     }
+  }
+}
+
+class AccumuloPyramidArgs extends AccumuloArgs with SparkArgs with HadoopArgs {
+  @Required var layerName: String = _
+  @Required var table: String = _  
+  @Required var startLevel: Int = _
+}
+
+
+object AccumuloPyramidCommand extends ArgMain[AccumuloPyramidArgs] with Logging {
+  def main(args: AccumuloPyramidArgs): Unit = {
+    System.setProperty("com.sun.media.jai.disableMediaLib", "true")
+
+    val conf = args.hadoopConf
+    conf.set("io.map.index.interval", "1")
+
+    implicit val sparkContext = args.sparkContext("Ingest")
+
+    val accumulo = AccumuloInstance(args.instance, args.zookeeper, args.user, new PasswordToken(args.password))
+    val catalog = accumulo.catalog
+
+    val rdd = catalog.load[SpatialKey](LayerId(args.layerName, args.startLevel)).get
+
+    val layoutScheme = ZoomedLayoutScheme(256)
+    val level = layoutScheme.levelFor(args.startLevel)
+
+    val save = { (rdd: RasterRDD[SpatialKey], level: LayoutLevel) =>
+      accumulo.catalog.save(LayerId(args.layerName, level.zoom), args.table, rdd, true)
+    }
+
+    Pyramid.saveLevels(rdd, level, layoutScheme)(save)
   }
 }

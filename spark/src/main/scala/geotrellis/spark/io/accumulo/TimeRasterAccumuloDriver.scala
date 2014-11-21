@@ -15,15 +15,15 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 
 object TimeRasterAccumuloDriver extends AccumuloDriver[SpaceTimeKey] {
-  def rowId(layerId: LayerId, col: Int, row: Int) = new Text(s"${layerId.zoom}_${col}_${row}")
-  val rowIdRx = """(\d+)_(\d+)_(\d+)""".r // (zoom)_(SpatialKey.col)_(SpatialKey.row)
+  def rowId(layerId: LayerId, col: Int, row: Int, time: DateTime) = new Text(s"${layerId.name}_${col}_${row}_${time.withZone(DateTimeZone.UTC).toString}_${layerId.zoom}")
+  val rowIdRx = """(\d+)_(\d+)_([^_]+)_([^_]+)_(\d+)""".r // (zoom)_(SpatialKey.col)_(SpatialKey.row)
 
   /** Map rdd of indexed tiles to tuples of (table name, row mutation) */
   def encode(layerId: LayerId, raster: RasterRDD[SpaceTimeKey]): RDD[(Text, Mutation)] =
     raster.map {
       case (SpaceTimeKey(spatialKey, time), tile) =>
-        val mutation = new Mutation(rowId(layerId, spatialKey.col, spatialKey.row))
-        mutation.put(new Text(layerId.name), new Text(time.withZone(DateTimeZone.UTC).toString),
+        val mutation = new Mutation(rowId(layerId, spatialKey.col, spatialKey.row, time))
+        mutation.put(new Text(), new Text(),
           System.currentTimeMillis(), new Value(tile.toBytes()))
         (null, mutation)
     }
@@ -32,9 +32,9 @@ object TimeRasterAccumuloDriver extends AccumuloDriver[SpaceTimeKey] {
   def decode(rdd: RDD[(Key, Value)], metaData: RasterMetaData): RasterRDD[SpaceTimeKey] = {
     val tileRdd = rdd.map {
       case (key, value) =>
-        val rowIdRx(zoom, col, row) = key.getRow.toString
+        val rowIdRx(col, row, timeString, layerName, zoom) = key.getRow.toString
         val spatialKey = SpatialKey(col.toInt, row.toInt)
-        val time = DateTime.parse(key.getColumnQualifier.toString)
+        val time = DateTime.parse(timeString)
         val tile = ArrayTile.fromBytes(value.get, metaData.cellType, metaData.tileLayout.tileCols, metaData.tileLayout.tileRows)
         SpaceTimeKey(spatialKey, time) -> tile.asInstanceOf[Tile]
     }
@@ -51,33 +51,47 @@ object TimeRasterAccumuloDriver extends AccumuloDriver[SpaceTimeKey] {
 
   def setFilters(job: Job, layerId: LayerId, filterSet: FilterSet[SpaceTimeKey]): Unit = {
     var tileBoundSet = false
+    var bounds: GridBounds = null
+    var from: DateTime = null
+    var to: DateTime = null
+
     filterSet.filters.foreach {
-      case SpaceFilter(bounds) =>
+      case SpaceFilter(filterBounds) =>
         tileBoundSet = true
+	bounds = filterBounds
 
-        val ranges = 
-          for(row <- bounds.rowMin to bounds.rowMax) yield {
-            new ARange(rowId(layerId, bounds.colMin, row), rowId(layerId, bounds.colMax, row))
-          }
+//        val ranges = 
+//          for(row <- bounds.rowMin to bounds.rowMax) yield {
+//            new ARange(rowId(layerId, bounds.colMin, row), rowId(layerId, bounds.colMax, row))
+//          }
 
-        InputFormatBase.setRanges(job, ranges)
+//        InputFormatBase.setRanges(job, ranges)
       case TimeFilter(startTime, endTime) =>
-        val from = new JPair(new Text(layerId.name), new Text(startTime.toString))
-        val to = new JPair(new Text(layerId.name), new Text(endTime.toString))
+        from = startTime
+        to = endTime
+//        val from = new JPair(new Text(layerId.name), new Text(startTime.toString))
+//        val to = new JPair(new Text(layerId.name), new Text(endTime.toString))
 
-        val props = 
-          Map(
-            "startBound" -> startTime.toString, 
-            "endBound" -> endTime.toString,
-            "startInclusive" -> "true",
-            "endInclusive" -> "true"
-          )
+//        val props = 
+//          Map(
+//            "startBound" -> startTime.toString, 
+//            "endBound" -> endTime.toString,
+//            "startInclusive" -> "true",
+//            "endInclusive" -> "true"
+//          )
 
-        val iterator = 
-          new IteratorSetting(1, "TimeColumnFilter", "org.apache.accumulo.core.iterators.user.ColumnSliceFilter", props)
-        InputFormatBase.addIterator(job, iterator)
+//        val iterator = 
+//          new IteratorSetting(1, "TimeColumnFilter", "org.apache.accumulo.core.iterators.user.ColumnSliceFilter", props)
+//        InputFormatBase.addIterator(job, iterator)
     }
-    if (!tileBoundSet) setZoomBounds(job, layerId)
+
+
+     if(bounds != null && from != null) {
+    val arange = 
+    	  new ARange(rowId(layerId, bounds.colMin, bounds.rowMin, from), rowId(layerId, bounds.colMin, bounds.rowMin, from))
+	      InputFormatBase.setRanges(job, Seq(arange))
+      }
+//    if (!tileBoundSet) setZoomBounds(job, layerId)
     //Set the filter for layer we need
     InputFormatBase.fetchColumns(job, new JPair(new Text(layerId.name), null: Text) :: Nil)
   }

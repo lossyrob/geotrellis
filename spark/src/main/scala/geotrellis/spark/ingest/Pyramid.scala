@@ -23,7 +23,7 @@ object Pyramid extends Logging {
    */
   def saveLevels[K: SpatialComponent: ClassTag](rdd: RasterRDD[K], level: LayoutLevel, layoutScheme: LayoutScheme)
                                                (save: (RasterRDD[K], LayoutLevel) => Try[Unit]): Try[Unit] = Try {
-    logInfo(s"Saving raster at $level")
+    logInfo(s"-----------------------Saving raster at $level------------------------")
     save(rdd, level).get // force errors on save
     if (level.zoom > 1) {
       val (nextRdd, nextLevel) = Pyramid.up(rdd, level, layoutScheme)
@@ -82,6 +82,8 @@ object Pyramid extends Logging {
           val newKey = key.updateSpatialComponent(spatialKey)
           (newKey, newTile: Tile)
         }
+
+    logInfo(s"   $nextLevel has ${nextRdd.count} tiles.------------------------")
 
     new RasterRDD(nextRdd, nextMetaData) -> nextLevel
   }
