@@ -45,7 +45,8 @@ trait AccumuloDriver[K] {
           new Text(f"${layerId.zoom}%02d_${splitCoord._1}%06d_${splitCoord._2}%06d")
         }
 
-      accumulo.connector.tableOperations().addSplits(table, new java.util.TreeSet(splits.toSeq))
+      if(!splits.isEmpty)
+        accumulo.connector.tableOperations().addSplits(table, new java.util.TreeSet(splits.toSeq))
 
       val job = Job.getInstance(sc.hadoopConfiguration)
       accumulo.setAccumuloConfig(job)

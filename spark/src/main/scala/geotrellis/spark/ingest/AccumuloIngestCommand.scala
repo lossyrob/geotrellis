@@ -46,3 +46,50 @@ object AccumuloIngestCommand extends ArgMain[AccumuloIngestArgs] with Logging {
     }
   }
 }
+
+class AccumuloPyramidArgs extends IngestArgs with AccumuloArgs {
+  @Required var table: String = _  
+  @Required var startLevel: Int = _
+  var endLevel: Int = 1
+  @Required var layer: String = _
+}
+
+
+object AccumuloPyramidCommand extends ArgMain[AccumuloPyramidArgs] with Logging {
+  def main(args: AccumuloIngestArgs): Unit = {
+    System.setProperty("com.sun.media.jai.disableMediaLib", "true")
+
+    if(args.startLevel <= args.endLevel) { println(s"startLevel must be greater than endLevel"); return; }
+
+    val conf = args.hadoopConf
+    conf.set("io.map.index.interval", "1")
+
+    implicit val sparkContext = args.sparkContext("Ingest")
+
+    val accumulo = AccumuloInstance(args.instance, args.zookeeper, args.user, new PasswordToken(args.password))
+    val catalog = accumulo.catalog
+
+    val rdd = catalog.load[SpatialKey](LayerId(layer, args.startLevel))
+
+    val layoutScheme = ZoomedLayoutScheme(256)
+    val level = layoutScheme.levelFor(args.startLevel)
+
+    val save = { (rdd: RasterRDD[SpatialKey], level: LayoutLevel) =>
+      accumulo.catalog.save(LayerId(args.layerName, level.zoom), args.table, rdd, args.clobber)
+    }
+
+    Pyramid.saveLevels(rdd, level, layoutScheme, args.endLevel)(save)
+
+    val (level, rdd) =  Ingest[ProjectedExtent, SpatialKey](source, args.destCrs, layoutScheme)
+
+    val save = { (rdd: RasterRDD[SpatialKey], level: LayoutLevel) =>
+      accumulo.catalog.save(LayerId(args.layerName, level.zoom), args.table, rdd, args.clobber)
+    }
+    if (args.pyramid) {
+      Pyramid.saveLevels(rdd, level, layoutScheme)(save).get // expose exceptions
+    } else{
+      save(rdd, level).get
+    }
+  }
+}
+

@@ -21,11 +21,11 @@ object Pyramid extends Logging {
    * @param layoutScheme  LayoutScheme used to create the RDD
    * @param save          Function(rdd, layoutLevel) that will be called for zoom each level, including original
    */
-  def saveLevels[K: SpatialComponent: ClassTag](rdd: RasterRDD[K], level: LayoutLevel, layoutScheme: LayoutScheme)
+  def saveLevels[K: SpatialComponent: ClassTag](rdd: RasterRDD[K], level: LayoutLevel, layoutScheme: LayoutScheme, endLevel: Int = 1)
                                                (save: (RasterRDD[K], LayoutLevel) => Try[Unit]): Try[Unit] = Try {
     logInfo(s"Saving raster at $level")
     save(rdd, level).get // force errors on save
-    if (level.zoom > 1) {
+    if (level.zoom > endLevel) {
       val (nextRdd, nextLevel) = Pyramid.up(rdd, level, layoutScheme)
       saveLevels(nextRdd, nextLevel, layoutScheme)(save)
     }
