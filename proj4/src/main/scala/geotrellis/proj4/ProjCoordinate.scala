@@ -18,6 +18,7 @@ package geotrellis.proj4
 
 import java.text.DecimalFormat
 
+// TODO: Remove
 object ProjCoordinate {
   val DECIMAL_FORMAT_PATTERN = "0.0###############"
   val DECIMAL_FORMAT = new DecimalFormat(DECIMAL_FORMAT_PATTERN)

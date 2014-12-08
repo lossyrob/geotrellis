@@ -41,7 +41,7 @@ class CoordinateReferenceSystem(
   val name = 
     inputName match {
       case Some(n) => n
-      case _ => s"${projection.getName}-CS"
+      case _ => s"${projection.name}-CS"
     }
 
   val parameters: Array[String] =

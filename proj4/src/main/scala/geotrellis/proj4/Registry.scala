@@ -83,7 +83,7 @@ object Registry {
     Ellipsoid("NAD83", 6378137.0, 0.0, 298.257222101, "NAD83: GRS 1980 (IUGG, 1980)")
   )
 
-  private lazy val projectionTypes: Map[String, ProjectionType] =
+  private lazy val projectionBuilders: Map[String, ProjectionBuilder] =
     Map(
       "aea" -> AlbersType,
       "aeqd" -> EquidistantAzimuthalType,
@@ -174,8 +174,8 @@ object Registry {
     )
 
 
-  def getProjectionType(name: String): Option[ProjectionType] =
-    projectionTypes.get(name)
+  def getProjectionBuilder(name: String): Option[ProjectionType] =
+    projectionBuilders.get(name)
 
   def getEllipsoid(name: String): Option[Ellipsoid] =
     ellipsoids.filter(_.shortName == name).headOption

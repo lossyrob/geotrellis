@@ -25,3 +25,4 @@ class DefaultProjection(pb: ProjectionBuilder) extends Projection {
   def project(lplam: Double, lpphi: Double): ProjCoordinate = ???
 
 }
+

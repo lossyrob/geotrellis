@@ -1,22 +1,21 @@
 package geotrellis.proj4.proj
 
 import geotrellis.proj4.{ProjCoordinate, ProjectionException}
+import geotrellis.util.ProjectionMath._
 
 object AiryProjection {
 
-  lazy val Eps = 1e-10
+  final val NPole = 0
 
-  lazy val NPole = 0
+  final val SPole = 1
 
-  lazy val SPole = 1
+  final val Equit = 2
 
-  lazy val Equit = 2
-
-  lazy val Obliq = 3
-
+  final val Obliq = 3
 }
 
-class AiryProjection(pb: ProjectionBuilder) extends Projection {
+object AiryProjectionBuilder extends ProjectionBuilder {
+  def apply(pp: ProjectionParams): Projection = {
 
   import AiryProjection._
 
@@ -25,11 +24,11 @@ class AiryProjection(pb: ProjectionBuilder) extends Projection {
   val cb = 1 / math.tan(beta) * math.log(math.cos(beta))
 
   val (halfPi, mode, sinPh, cosPh) =
-    if (math.abs(math.abs(pb.projectionLatitude) - math.Pi / 2) < Eps) {
+    if (math.abs(math.abs(pb.projectionLatitude) - math.Pi / 2) < EPS_10) {
       if (pb.projectionLatitude < 0) (-math.Pi / 2, SPole, 0.0, 0.0)
       else  (math.Pi / 2, NPole, 0.0, 0.0)
     } else {
-      if (math.abs(pb.projectionLatitude) < Eps) (0.0, Equit, 0.0, 0.0)
+      if (math.abs(pb.projectionLatitude) < EPS_1) (0.0, Equit, 0.0, 0.0)
       else (0.0, Obliq, math.sin(pb.projectionLatitude), math.cos(pb.projectionLatitude))
     }
 
@@ -46,11 +45,11 @@ class AiryProjection(pb: ProjectionBuilder) extends Projection {
         cosz = cosPhi * cosLam
 
         if (mode == Obliq) cosz = sinPh * sinPhi + cosPh * cosPhi
-        if (cosz < Eps) throw new ProjectionException("F")
+        if (cosz < EPS_10) throw new ProjectionException("F")
 
         s = 1 - cosz
 
-        if (math.abs(s) < Eps) {
+        if (math.abs(s) < EPS_10) {
           t = 0.5 * (1 + cosz)
           krho = -math.log(t) / s - cb / t
         } else krho = 0.5 - cb
@@ -63,10 +62,10 @@ class AiryProjection(pb: ProjectionBuilder) extends Projection {
         ProjCoordinate(x, y)
       }
       case NPole | SPole => {
-        if (lpphi - Eps > math.Pi / 2) throw new ProjectionException("F")
+        if (lpphi - EPS_10 > math.Pi / 2) throw new ProjectionException("F")
 
         var y = math.abs(halfPi - lpphi) * 0.5
-        if (y > Eps) {
+        if (y > EPS_10) {
           t = math.tan(lpphi)
           krho = -2 * (math.log(math.cos(lpphi)) / t + t * cb)
           val x = krho * sinLam

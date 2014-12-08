@@ -19,7 +19,6 @@ package geotrellis.proj4.util
 import geotrellis.proj4._
 
 object ProjectionMath {
-
   val HALF_PI = math.Pi / 2
 
   val QUARTER_PI = math.Pi / 4
@@ -206,6 +205,7 @@ object ProjectionMath {
   private val C68 = 0.00569661458333333333
   private val C88 = 0.3076171875
 
+  // TODO: What does this do?
   def enfn(es: Double): Array[Double] = 
     Array(
       C00 - es * (C02 + es * (C04 + es * (C06 + es * C08))),
@@ -215,6 +215,7 @@ object ProjectionMath {
       math.pow(es, 4) * C88
     )
 
+  // TODO: What does this do?
   def mlfn(phi: Double, sphi: Double, cphi: Double, en: Array[Double]): Double = {
     var cphiR = cphi * sphi
     var sphiR = sphi * sphi

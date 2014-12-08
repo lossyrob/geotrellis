@@ -85,12 +85,11 @@ object Proj4Parser {
   private def parseProjection(params: Map[String, String], ellipsoid: Ellipsoid): Projection =
     params.get(Proj4Keyword.proj) match {
       case Some(code) =>
-        val projectionType = Registry.getProjectionType(code) getOrElse {
+        val projectionBuilder = Registry.getProjectionBuilder(code) getOrElse {
             throw new InvalidValueException("Unknown projection: $code.")
           }
 
-        new Proj4StringParams(params, ellipsoid, projectionType)
-          .createProjectionBuilder.build
+        projectionBuilder(Proj4StringParams(params, ellipsoid))
       case None => throw new IllegalStateException("No proj flag specified.")
     }
 
