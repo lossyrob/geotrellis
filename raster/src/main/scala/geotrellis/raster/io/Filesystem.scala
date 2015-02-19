@@ -22,10 +22,20 @@ import java.nio.channels.FileChannel.MapMode._
 import scala.math.min
 
 object Filesystem {
-  def slurp(path: String, bs: Int = 262144): Array[Byte] = {
-    val f = new File(path)
-    val fis = new FileInputStream(f)
-    val size = f.length.toInt
+  val DEFAULT_BUFFER_READ_SIZE = 262144
+
+  def slurp(path: String): Array[Byte] =
+    slurp(new File(path))
+
+  def slurp(path: String, bs: Int): Array[Byte] =
+    slurp(new File(path), bs)
+
+  def slurp(file: File): Array[Byte] =
+    slurp(file, DEFAULT_BUFFER_READ_SIZE)
+
+  def slurp(file: File, bs: Int): Array[Byte] = {
+    val fis = new FileInputStream(file)
+    val size = file.length.toInt
     val channel = fis.getChannel
     val buffer = channel.map(READ_ONLY, 0, size)
     fis.close

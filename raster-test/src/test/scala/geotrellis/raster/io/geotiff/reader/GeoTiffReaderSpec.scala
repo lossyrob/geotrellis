@@ -22,22 +22,18 @@ import geotrellis.raster._
 import geotrellis.raster.io.arg._
 import geotrellis.raster.io.geotiff.GeoTiffTestUtils
 import geotrellis.raster.op.zonal.summary._
-
 import geotrellis.vector.Extent
-
-import geotrellis.testkit._
-
 import geotrellis.proj4.{CRS, LatLng}
+import geotrellis.testkit._
 
 import monocle.syntax._
 
 import scala.io.{Source, Codec}
-
 import scala.collection.immutable.HashMap
 
 import java.util.BitSet
-
 import java.nio.ByteBuffer
+import java.io.File
 
 import spire.syntax.cfor._
 
@@ -89,7 +85,7 @@ class GeoTiffReaderSpec extends FunSpec
   describe("reading an ESRI generated Float32 geotiff with 0 NoData value") {
 
     it("matches an arg produced from geotrellis.gdal reader of that tif") {
-      val tile = GeoTiff(s"$filePath/geotiff-reader-tiffs/us_ext_clip_esri.tif")
+      val tile = GeoTiff(new File(s"$filePath/geotiff-reader-tiffs/us_ext_clip_esri.tif"))
         .firstBand.tile
 
       val expectedTile =

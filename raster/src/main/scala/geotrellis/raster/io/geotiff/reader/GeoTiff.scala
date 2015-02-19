@@ -54,6 +54,8 @@ object GeoTiff {
 
   def apply(path: String): GeoTiff = GeoTiffReader.read(path)
 
+  def apply(file: java.io.File): GeoTiff = GeoTiffReader.read(file)
+
   def apply(bytes: Array[Byte]): GeoTiff = GeoTiffReader.read(bytes)
 
 }
