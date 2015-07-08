@@ -203,7 +203,7 @@ object GeotrellisBuild extends Build {
       fork in test := false,
       javaOptions in run += "-Xmx2G",
       scalacOptions ++= Seq(
-        "-optimize",
+//        "-optimize",
         "-language:experimental.macros"
       ),
       addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
