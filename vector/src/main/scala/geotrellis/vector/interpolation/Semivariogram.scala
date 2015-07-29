@@ -67,82 +67,7 @@ object Semivariogram {
   var s: Double = 0   //Sill
   var a: Double = 0   //Nugget
 
-  trait LeastSquaresFittingProblem {
-    var x: Array[Double] = Array()
-    var y: Array[Double] = Array()
-    var start: Array[Double] = Array()
 
-    def addPoint(Px: Double, Py: Double) = {
-      x = x :+ Px
-      y = y :+ Py
-    }
-    def calculateTarget(): Array[Double] = y
-    def valueFunc(w: Double, s: Double, a: Double): Double => Double
-    def jacobianFunc(variables: Array[Double]): Double => Array[Double]
-
-    def retMVF(): MultivariateVectorFunction = {
-      new MultivariateVectorFunction {
-        def value(variables: Array[Double]): Array[Double] = {
-          val values: Array[Double] = Array.ofDim[Double](x.length)
-          cfor(0)(_ < values.length, _ + 1) { i =>
-            values(i) = valueFunc(variables(0), variables(1), variables(2))(x(i))
-          }
-          values
-        }
-      }
-    }
-    def retMMF(): MultivariateMatrixFunction = {
-      def jacobianConstruct(variables: Array[Double]): Array[Array[Double]] = {
-        val jacobianRet: Array[Array[Double]] = Array.ofDim[Double](x.length, 3)
-        cfor(0)(_ < jacobianRet.length, _ + 1) { i =>
-          jacobianRet(i) = jacobianFunc(variables)(x(i))
-        }
-        jacobianRet
-      }
-      new MultivariateMatrixFunction {
-        override def value(doubles: Array[Double]): Array[Array[Double]] = jacobianConstruct(doubles)
-      }
-    }
-  }
-
-  trait LeastSquaresFittingNuggetProblem {
-    var x: Array[Double] = Array()
-    var y: Array[Double] = Array()
-    var start: Array[Double] = Array()
-
-    def addPoint(Px: Double, Py: Double) = {
-      x = x :+ Px
-      y = y :+ Py
-    }
-    def calculateTarget(): Array[Double] = y
-
-    def valueFuncNugget(w: Double, s: Double): Double => Double
-    def jacobianFuncNugget(variables: Array[Double]): Double => Array[Double]
-
-    def retMVF(): MultivariateVectorFunction = {
-      new MultivariateVectorFunction {
-        def value(variables: Array[Double]): Array[Double] = {
-          val values: Array[Double] = Array.ofDim[Double](x.length)
-          cfor(0)(_ < values.length, _ + 1) { i =>
-            values(i) = valueFuncNugget(variables(0), variables(1))(x(i))
-          }
-          values
-        }
-      }
-    }
-    def retMMF(): MultivariateMatrixFunction = {
-      def jacobianConstruct(variables: Array[Double]): Array[Array[Double]] = {
-        val jacobianRet: Array[Array[Double]] = Array.ofDim[Double](x.length, 2)
-        cfor(0)(_ < jacobianRet.length, _ + 1) { i =>
-          jacobianRet(i) = jacobianFuncNugget(variables)(x(i))
-        }
-        jacobianRet
-      }
-      new MultivariateMatrixFunction {
-        override def value(doubles: Array[Double]): Array[Array[Double]] = jacobianConstruct(doubles)
-      }
-    }
-  }
 
   def optConstructor(problem: AnyRef) = {
     val lsb: LeastSquaresBuilder = new LeastSquaresBuilder()
@@ -203,25 +128,30 @@ object Semivariogram {
     model match {
       //Least Squares minimization
       case Gaussian =>
+        val problem =
+          new LeastSquaresFittingProblem(empiricalSemivariogram.distances, empiricalSemivariogram.variances, begin) {
+            def valueFunc(r: Double, s: Double, a: Double): Double => Double = NonLinearSemivariogram.explicitModel(r, s, a, Gaussian)
+            def jacobianFunc(variables: Array[Double]): Double => Array[Double] = NonLinearSemivariogram.jacobianModel(variables, Gaussian)
+          }
+
         class GaussianProblem extends LeastSquaresFittingProblem {
           start = begin
           def valueFunc(r: Double, s: Double, a: Double): Double => Double = NonLinearSemivariogram.explicitModel(r, s, a, Gaussian)
           def jacobianFunc(variables: Array[Double]): Double => Array[Double] = NonLinearSemivariogram.jacobianModel(variables, Gaussian)
         }
+
         class GaussianNuggetProblem extends LeastSquaresFittingNuggetProblem {
           start = begin.dropRight(1)
           def valueFuncNugget(r: Double, s: Double): Double => Double = NonLinearSemivariogram.explicitNuggetModel(r, s, Gaussian)
           def jacobianFuncNugget(variables: Array[Double]): Double => Array[Double] =  NonLinearSemivariogram.jacobianModel(variables, Gaussian)
         }
 
-        val problem = new GaussianProblem
-        problem.x = empiricalSemivariogram.distances
-        problem.y = empiricalSemivariogram.variance
-        val opt: Optimum = optConstructor(problem)
+        val opt: Optimum = problem.optimum
         val optimalValues: Array[Double] = opt.getPoint.toArray
 
         if (optimalValues(2) < 0) {
-          val problem = new GaussianNuggetProblem
+          // Constructed like problem
+          val nuggetProblem = new GaussianNuggetProblem
           problem.x = empiricalSemivariogram.distances
           problem.y = empiricalSemivariogram.variance
           val opt: Optimum = optConstructor(problem)
