@@ -22,7 +22,7 @@ import spire.syntax.cfor._
 
 import scala.collection.mutable
 
-trait KrigingVectorBase{
+trait KrigingVectorBase {
   def createPredictor(): Point => (Double, Double)
   def predict(pointMatrix: Array[Point]): Array[(Double, Double)]
 

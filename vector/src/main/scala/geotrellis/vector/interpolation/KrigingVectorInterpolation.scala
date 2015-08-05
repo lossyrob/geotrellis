@@ -24,6 +24,7 @@ import spire.syntax.cfor._
  * @param bandwidth       The maximum inter-point pair-distances which influence the prediction
  * @param sv              [[Semivariogram]] to be used for Kriging prediction
  */
+class SimpleKrigingInterpolation(points: Array[PointFeature[Double]], bandwidth: Double, sv: Semivariogram) extends KrigingInterpolation {
 class KrigingSimple(points: Array[PointFeature[Double]], bandwidth: Double, sv: Semivariogram) extends KrigingVectorBase {
 
   /**
@@ -31,6 +32,46 @@ class KrigingSimple(points: Array[PointFeature[Double]], bandwidth: Double, sv: 
    */
   def createPredictor(): Point => (Double, Double) = {
     P: Point => predict(Array(P))(0)
+  }
+
+  def predict(tile: Tile, extent: Extent): Tile = {
+    val numberOfCells = tile.cols * tile.rows
+    val rasterExtent = RasterExtent(extent, tile.cols, tile.rows)
+    val unitCol: RealMatrix = MatrixUtils.createColumnRealMatrix(Array.fill(numberOfCells)(1))
+
+    //Covariogram Matrix
+    val covarianceMatrix: RealMatrix = 
+      unitCol
+        .multiply(unitCol.transpose())
+        .scalarMultiply(sv.sill)
+        .subtract(varianceMatrixGen(sv, points))
+        .add(MatrixUtils.createRealIdentityMatrix(numberOfCells).scalarMultiply(sv.nugget))
+
+    val pointValue: RealMatrix = MatrixUtils.createColumnRealMatrix(points.map(x => x.data))
+    val krigingPrediction: Tile = DoubleArrayTile.empty(tile.cols, tile.rows)
+
+    cfor(0)(_ < tile.cols, _ + 1) { col =>
+      cfor(0)(_ < tile.rows, _ + 1) { row => 
+        val (x, y) = rasterExtent.gridToMap(col, row)
+        val distnaceSortedSimple = getPointDistancesSorted(points, 3, bandwidth, pointPredict)
+        val distanceID: Array[Int] = distanceSortedSimple.map(_._1)
+        //Local Covariances
+        val CC: RealMatrix = new EigenDecomposition(covarianceMatrix.getSubMatrix(distanceID, distanceID)).getSolver.getInverse
+        val d: RealMatrix = MatrixUtils.createColumnRealMatrix(distanceSortedSimple.map(_._2))
+        //Local Covariance Vector
+        val covVec: RealMatrix = unitCol.getSubMatrix(distanceID, Array(0)).scalarMultiply(sv.sill).subtract(MatrixUtils.createRealMatrix(Array.tabulate(d.getRowDimension, 1){(i, _) => sv(d.getEntry(i,0))}))
+        cfor(0)(_ < d.getRowDimension, _ + 1) { j: Int =>
+          if (d.getEntry(j, 0) == 0)
+            covVec.setEntry(j, 0, covVec.getEntry(j, 0) + sv.nugget)
+        }
+        val mu: Double = points.foldLeft(0.0)(_ + _.data) / n
+        val kTemp: RealMatrix = covVec.transpose().multiply(CC)
+        val kPredict = mu + kTemp.multiply(pointValue.getSubMatrix(distanceID, Array(0)).subtract(unitCol.getSubMatrix(distanceID, Array(0)).scalarMultiply(mu))).getEntry(0, 0)
+        krigingPrediction.setDouble(col, row, kPredict)
+      }
+    }
+
+    krigingPrediction
   }
 
   /**
@@ -44,16 +85,24 @@ class KrigingSimple(points: Array[PointFeature[Double]], bandwidth: Double, sv: 
       throw new IllegalArgumentException("No points in the training dataset")
 
     val unitCol: RealMatrix = MatrixUtils.createColumnRealMatrix(Array.fill(n)(1))
+
     //Covariogram Matrix
-    val C: RealMatrix = unitCol.multiply(unitCol.transpose()).scalarMultiply(sv.sill).subtract(varianceMatrixGen(sv, points)).add(MatrixUtils.createRealIdentityMatrix(n).scalarMultiply(sv.nugget))
+    val covarianceMatrix: RealMatrix = 
+      unitCol
+        .multiply(unitCol.transpose())
+        .scalarMultiply(sv.sill)
+        .subtract(varianceMatrixGen(sv, points))
+        .add(MatrixUtils.createRealIdentityMatrix(n).scalarMultiply(sv.nugget))
+
     val pointValue: RealMatrix = MatrixUtils.createColumnRealMatrix(points.map(x => x.data))
     val krigingPrediction: Array[(Double, Double)] = Array.ofDim[(Double, Double)](pointMatrix.length)
+
     cfor(0)(_ < pointMatrix.length, _ + 1) { i: Int =>
       val pointPredict: Point = pointMatrix(i)
       val distanceSortedSimple: Array[(Int, Double)] = getPointDistancesSorted(points, 3, bandwidth, pointPredict)
       val distanceID: Array[Int] = distanceSortedSimple.map(_._1)
       //Local Covariances
-      val CC: RealMatrix = new EigenDecomposition(C.getSubMatrix(distanceID, distanceID)).getSolver.getInverse
+      val CC: RealMatrix = new EigenDecomposition(covarianceMatrix.getSubMatrix(distanceID, distanceID)).getSolver.getInverse
       val d: RealMatrix = MatrixUtils.createColumnRealMatrix(distanceSortedSimple.map(_._2))
       //Local Covariance Vector
       val covVec: RealMatrix = unitCol.getSubMatrix(distanceID, Array(0)).scalarMultiply(sv.sill).subtract(MatrixUtils.createRealMatrix(Array.tabulate(d.getRowDimension, 1){(i, _) => sv(d.getEntry(i,0))}))
