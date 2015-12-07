@@ -2,18 +2,15 @@ package geotrellis.spark.io.slippy
 
 import geotrellis.vector._
 import geotrellis.raster._
-import geotrellis.raster.io.Filesystem
 import geotrellis.raster.io.geotiff._
 import geotrellis.spark._
 import geotrellis.spark.io.s3._
 
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.filefilter._
 import org.apache.spark._
 import org.apache.spark.rdd._
 import java.io.File
 
-class S3SlippyTileReader[T](uri: String)(fromBytes: (SpatialKey, Array[Byte]) => T) extends SlippyTileReader[T] {
+class S3SlippyTileReader[T](uri: String)(fromBytes: (SpatialKey, Array[Byte]) => T)(implicit sc: SparkContext) extends SlippyTileReader[T] {
   import SlippyTileReader.TilePath
 
   val client = S3Client.default
@@ -34,16 +31,15 @@ class S3SlippyTileReader[T](uri: String)(fromBytes: (SpatialKey, Array[Byte]) =>
     }
   }
 
-  def read(zoom: Int)(implicit sc: SparkContext): RDD[(SpatialKey, T)] = {
+  def read(zoom: Int): RDD[(SpatialKey, T)] = {
     val keys = {
       client.listKeys(bucket, prefix)
-        .map { key =>
+        .flatMap { key =>
           key match {
             case TilePath(z, x, y) if z.toInt == zoom => Some((SpatialKey(x.toInt, y.toInt), key))
             case _ => None
           }
         }
-        .flatten
         .toSeq
     }
 

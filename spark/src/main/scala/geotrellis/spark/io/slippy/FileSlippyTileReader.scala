@@ -12,15 +12,12 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter._
 import org.apache.spark._
 import org.apache.spark.rdd._
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.mapreduce.Job
-import org.apache.hadoop.mapreduce.{InputSplit, TaskAttemptContext}
 import org.apache.hadoop.fs.Path
 
 import java.io._
 import scala.collection.JavaConversions._
 
-class FileSlippyTileReader[T](uri: String, extensions: Seq[String] = Seq())(fromBytes: (SpatialKey, Array[Byte]) => T) extends SlippyTileReader[T] {
+class FileSlippyTileReader[T](uri: String, extensions: Seq[String] = Seq())(fromBytes: (SpatialKey, Array[Byte]) => T)(implicit sc: SparkContext) extends SlippyTileReader[T] {
   import SlippyTileReader.TilePath
 
   private def listFiles(path: String): Seq[File] =
@@ -41,7 +38,7 @@ class FileSlippyTileReader[T](uri: String, extensions: Seq[String] = Seq())(from
     }
   }
 
-  def read(zoom: Int)(implicit sc: SparkContext): RDD[(SpatialKey, T)] = {
+  def read(zoom: Int): RDD[(SpatialKey, T)] = {
     val paths = {
       listFiles(uri)
         .flatMap { file =>
