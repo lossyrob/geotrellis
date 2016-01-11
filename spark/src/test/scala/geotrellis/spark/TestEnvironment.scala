@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2014 DigitalGlobe.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,7 +93,7 @@ trait TestEnvironment extends BeforeAndAfterAll { self: Suite =>
   }
 
 
-  /* 
+  /*
    * Makes directory given a path. The parent directory is expected to exist
    * e.g., to make directory bar under /tmp/foo, call mkdir(new Path("/tmp/foo/bar"))
    * The parent directory is assumed to exist
@@ -101,9 +101,9 @@ trait TestEnvironment extends BeforeAndAfterAll { self: Suite =>
   def mkdir(dir: Path): Unit = {
    val handle = new File(dir.toUri())
     if (!handle.exists)
-      handle.mkdirs()    
+      handle.mkdirs()
   }
-  
+
   def clearTestDirectory() = FileUtil.fullyDelete(new File(outputLocal.toUri()))
 
   // clean up the test directory after the test
@@ -112,7 +112,7 @@ trait TestEnvironment extends BeforeAndAfterAll { self: Suite =>
     FileUtil.fullyDelete(new File(outputLocal.toUri()))
     sc.stop()
   }
- 
+
   // root directory name on both local file system and hdfs for all tests
   private final val outputHome = "testFiles"
 
