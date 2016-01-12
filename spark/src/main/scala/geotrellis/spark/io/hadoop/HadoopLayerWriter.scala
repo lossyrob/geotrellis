@@ -19,9 +19,9 @@ class HadoopLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: Json
   val attributeStore: AttributeStore[JsonFormat],
   rddWriter: HadoopRDDWriter[K, V],
   keyIndexMethod: KeyIndexMethod[K])
-  extends Writer[LayerId, RDD[(K, V)] with Metadata[M]] {
+  extends Writer[LayerId, RDD[(K, V)] with Metadata[M], K] {
 
-  def write(id: LayerId, rdd: RDD[(K, V)] with Metadata[M]): Unit = {
+  def write(id: LayerId, rdd: RDD[(K, V)] with Metadata[M], kb: Option[KeyBounds[K]]): Unit = {
     implicit val sc = rdd.sparkContext
 
     val layerPath = new Path(rootPath,  s"${id.name}/${id.zoom}")
@@ -33,7 +33,7 @@ class HadoopLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: Json
         path = layerPath
       )
     val metaData = rdd.metadata
-    val keyBounds = implicitly[Boundable[K]].getKeyBounds(rdd)
+    val keyBounds = kb.getOrElse(implicitly[Boundable[K]].getKeyBounds(rdd))
     val keyIndex = keyIndexMethod.createIndex(keyBounds)
 
     try {

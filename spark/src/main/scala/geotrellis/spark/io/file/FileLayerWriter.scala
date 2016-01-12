@@ -41,9 +41,9 @@ class FileLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: JsonFo
     catalogPath: String,
     clobber: Boolean = true,
     oneToOne: Boolean = false
-) extends Writer[LayerId, RDD[(K, V)] with Metadata[M]] with LazyLogging {
+) extends Writer[LayerId, RDD[(K, V)] with Metadata[M], K] with LazyLogging {
 
-  def write(layerId: LayerId, rdd: RDD[(K, V)] with Metadata[M]) = {
+  def write(layerId: LayerId, rdd: RDD[(K, V)] with Metadata[M], kb: Option[KeyBounds[K]]) = {
     val catalogPathFile = new File(catalogPath)
 
     require(!attributeStore.layerExists(layerId) || clobber, s"$layerId already exists")
@@ -57,7 +57,7 @@ class FileLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: JsonFo
         path = path
       )
 
-    val keyBounds = implicitly[Boundable[K]].getKeyBounds(rdd)
+    val keyBounds = kb.getOrElse(implicitly[Boundable[K]].getKeyBounds(rdd))
     val keyIndex = keyIndexMethod.createIndex(keyBounds)
     val maxWidth = Index.digits(keyIndex.toIndex(keyBounds.maxKey))
     val keyPath = KeyPathGenerator(catalogPath, path, keyIndex, maxWidth)
