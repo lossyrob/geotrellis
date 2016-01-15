@@ -27,7 +27,7 @@ import java.io.File
   * @tparam K                Type of RDD Key (ex: SpatialKey)
   * @tparam V                Type of RDD Value (ex: Tile or MultiBandTile )
   * @tparam M                Type of Metadata associated with the RDD[(K,V)]
-  * 
+  *
   * @param catalogPath  The root directory of this catalog.
   * @param keyPrefix         File prefix to write the raster to
   * @param keyIndexMethod    Method used to convert RDD keys to SFC indexes
@@ -41,23 +41,23 @@ class FileLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: JsonFo
     catalogPath: String,
     clobber: Boolean = true,
     oneToOne: Boolean = false
-) extends Writer[LayerId, RDD[(K, V)] with Metadata[M]] with LazyLogging {
+) extends Writer[LayerId, K, RDD[(K, V)] with Metadata[M]] with LazyLogging {
 
-  def write(layerId: LayerId, rdd: RDD[(K, V)] with Metadata[M]) = {
+  def write(layerId: LayerId, rdd: RDD[(K, V)] with Metadata[M], kb: Option[KeyBounds[K]]) = {
     val catalogPathFile = new File(catalogPath)
 
     require(!attributeStore.layerExists(layerId) || clobber, s"$layerId already exists")
 
     val path = LayerPath(layerId)
     val metadata = rdd.metadata
-    val header = 
+    val header =
       FileLayerHeader(
         keyClass = classTag[K].toString(),
         valueClass = classTag[K].toString(),
         path = path
       )
 
-    val keyBounds = implicitly[Boundable[K]].getKeyBounds(rdd)
+    val keyBounds = kb.getOrElse(implicitly[Boundable[K]].getKeyBounds(rdd))
     val keyIndex = keyIndexMethod.createIndex(keyBounds)
     val maxWidth = Index.digits(keyIndex.toIndex(keyBounds.maxKey))
     val keyPath = KeyPathGenerator(catalogPath, path, keyIndex, maxWidth)

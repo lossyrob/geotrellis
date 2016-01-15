@@ -7,9 +7,9 @@ import spray.json._
 import spray.json.DefaultJsonProtocol._
 import scala.reflect._
 
-abstract class PersistenceSpec[K: ClassTag, V: ClassTag, M] extends FunSpec with Matchers {
+abstract class PersistenceSpec[K: Boundable: ClassTag, V: ClassTag, M] extends FunSpec with Matchers {
   type TestReader = FilteringLayerReader[LayerId, K, M, RDD[(K, V)] with Metadata[M]]
-  type TestWriter = Writer[LayerId, RDD[(K, V)] with Metadata[M]]
+  type TestWriter = Writer[LayerId, K, RDD[(K, V)] with Metadata[M]]
   type TestUpdater = LayerUpdater[LayerId, K, V, M]
   type TestDeleter = LayerDeleter[LayerId]
   type TestCopier = LayerCopier[LayerId]
@@ -27,6 +27,7 @@ abstract class PersistenceSpec[K: ClassTag, V: ClassTag, M] extends FunSpec with
   def tiles: TestTileReader
 
   val layerId = LayerId("sample-" + this.getClass.getName, 1)
+  val preallocLayerId = LayerId("preallocSample-" + this.getClass.getName, 1)
   val deleteLayerId = LayerId("deleteSample-" + this.getClass.getName, 1) // second layer to avoid data race
   val copiedLayerId = LayerId("copySample-" + this.getClass.getName, 1)
   val movedLayerId = LayerId("moveSample-" + this.getClass.getName, 1)
@@ -104,7 +105,7 @@ abstract class PersistenceSpec[K: ClassTag, V: ClassTag, M] extends FunSpec with
     mover.move(movedLayerId, layerId)
   }
 
-  it("should not reindex a layer which doesn't exists") {
+  it("should not reindex a layer which doesn't exist") {
     intercept[LayerNotFoundError] {
       reindexer.reindex(movedLayerId)
     }
