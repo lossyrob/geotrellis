@@ -17,7 +17,7 @@ class AccumuloLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: Js
     rddWriter: BaseAccumuloRDDWriter[K, V],
     keyIndexMethod: KeyIndexMethod[K],
     table: String)
-  extends Writer[LayerId, RDD[(K, V)] with Metadata[M], K] {
+  extends Writer[LayerId, K, RDD[(K, V)] with Metadata[M]] {
 
   def write(id: LayerId, rdd: RDD[(K, V)] with Metadata[M], kb: Option[KeyBounds[K]]): Unit = {
     val header =

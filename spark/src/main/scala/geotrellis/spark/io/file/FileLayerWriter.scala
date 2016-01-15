@@ -41,7 +41,7 @@ class FileLayerWriter[K: Boundable: JsonFormat: ClassTag, V: ClassTag, M: JsonFo
     catalogPath: String,
     clobber: Boolean = true,
     oneToOne: Boolean = false
-) extends Writer[LayerId, RDD[(K, V)] with Metadata[M], K] with LazyLogging {
+) extends Writer[LayerId, K, RDD[(K, V)] with Metadata[M]] with LazyLogging {
 
   def write(layerId: LayerId, rdd: RDD[(K, V)] with Metadata[M], kb: Option[KeyBounds[K]]) = {
     val catalogPathFile = new File(catalogPath)

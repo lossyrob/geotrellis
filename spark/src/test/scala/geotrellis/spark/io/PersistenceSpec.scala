@@ -9,7 +9,7 @@ import scala.reflect._
 
 abstract class PersistenceSpec[K: Boundable: ClassTag, V: ClassTag, M] extends FunSpec with Matchers {
   type TestReader = FilteringLayerReader[LayerId, K, M, RDD[(K, V)] with Metadata[M]]
-  type TestWriter = Writer[LayerId, RDD[(K, V)] with Metadata[M], K]
+  type TestWriter = Writer[LayerId, K, RDD[(K, V)] with Metadata[M]]
   type TestUpdater = LayerUpdater[LayerId, K, V, M]
   type TestDeleter = LayerDeleter[LayerId]
   type TestCopier = LayerCopier[LayerId]
