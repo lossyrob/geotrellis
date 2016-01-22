@@ -6,7 +6,7 @@ import geotrellis.spark.io.index.hilbert._
 import com.github.nscala_time.time.Imports._
 
 
-private[index] trait HilbertKeyIndexMethod
+trait HilbertKeyIndexMethod
 
 object HilbertKeyIndexMethod extends HilbertKeyIndexMethod {
   implicit def spatialKeyIndexIndex(m: HilbertKeyIndexMethod): KeyIndexMethod[SpatialKey] =
