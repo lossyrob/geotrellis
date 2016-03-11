@@ -24,13 +24,13 @@ import geotrellis.raster.io.geotiff.SinglebandGeoTiff
 import org.scalatest.FunSpec
 
 
-class RasterRDDFilterMethodsSpec extends FunSpec with TestEnvironment {
+class TileLayerRDDFilterMethodsSpec extends FunSpec with TestEnvironment {
 
-  describe("RasterRDD Crop Methods") {
+  describe("TileLayerRDD Crop Methods") {
     val path = "raster-test/data/aspect.tif"
     val gt = SinglebandGeoTiff(path)
     val originalRaster = gt.raster.resample(500, 500)
-    val (_, rdd) = createRasterRDD(originalRaster, 5, 5, gt.crs)
+    val (_, rdd) = createTileLayerRDD(originalRaster, 5, 5, gt.crs)
     val allKeys = KeyBounds(GridKey(0,0), GridKey(4,4))
     val someKeys = KeyBounds(GridKey(1,1), GridKey(3,3))
     val moreKeys = KeyBounds(GridKey(4,4), GridKey(4,4))

@@ -8,7 +8,7 @@ import geotrellis.spark.io.accumulo.AccumuloLayerWriter
 
 import org.apache.spark.SparkContext
 
-class MultibandGridTimeKeyAccumuloOutput extends AccumuloOutput[GridTimeKey, MultibandTile, RasterMetadata[GridTimeKey]] {
+class MultibandGridTimeKeyAccumuloOutput extends AccumuloOutput[GridTimeKey, MultibandTile, LayerMetadata[GridTimeKey]] {
   def writer(method: KeyIndexMethod[GridTimeKey], props: Parameters)(implicit sc: SparkContext) =
-    AccumuloLayerWriter(getInstance(props), props("table")).writer[GridTimeKey, MultibandTile, RasterMetadata[GridTimeKey]](method)
+    AccumuloLayerWriter(getInstance(props), props("table")).writer[GridTimeKey, MultibandTile, LayerMetadata[GridTimeKey]](method)
 }

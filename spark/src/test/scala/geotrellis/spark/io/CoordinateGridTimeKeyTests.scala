@@ -7,7 +7,7 @@ import geotrellis.spark.io.avro.codecs._
 import geotrellis.spark.io.json._
 import org.joda.time.DateTime
 
-trait CoordinateGridTimeKeyTests { self: PersistenceSpec[GridTimeKey, Tile, RasterMetadata[GridTimeKey]] =>
+trait CoordinateGridTimeKeyTests { self: PersistenceSpec[GridTimeKey, Tile, LayerMetadata[GridTimeKey]] =>
   val dates = Vector( // all the dates in the layer
     new DateTime(2010,1,1,0,0,0, DateTimeZone.UTC),
     new DateTime(2011,1,1,0,0,0, DateTimeZone.UTC),
@@ -19,7 +19,7 @@ trait CoordinateGridTimeKeyTests { self: PersistenceSpec[GridTimeKey, Tile, Rast
 
   for(PersistenceSpecDefinition(keyIndexMethodName, _, layerIds) <- specLayerIds) {
     val layerId = layerIds.layerId
-    val query = reader.query[GridTimeKey, Tile, RasterMetadata[GridTimeKey]](layerId)
+    val query = reader.query[GridTimeKey, Tile, LayerMetadata[GridTimeKey]](layerId)
     describe(s"CoordinateGridTimeKey query tests for $keyIndexMethodName") {
       it("query outside of layer bounds") {
         query.where(Intersects(GridBounds(10, 10, 15, 15))).toRDD.collect() should be(empty)

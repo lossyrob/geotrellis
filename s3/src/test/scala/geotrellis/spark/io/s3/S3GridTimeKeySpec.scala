@@ -12,7 +12,7 @@ import org.joda.time.DateTime
 import org.scalatest._
 
 class S3GridTimeKeySpec
-  extends PersistenceSpec[GridTimeKey, Tile, RasterMetadata[GridTimeKey]]
+  extends PersistenceSpec[GridTimeKey, Tile, LayerMetadata[GridTimeKey]]
     with GridTimeKeyIndexMethods
     with TestEnvironment
     with TestFiles

@@ -9,7 +9,7 @@ import geotrellis.spark.io.index.KeyIndexMethod
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 
-class GridKeyHadoopOutput extends HadoopOutput[GridKey, Tile, RasterMetadata[GridKey]] {
+class GridKeyHadoopOutput extends HadoopOutput[GridKey, Tile, LayerMetadata[GridKey]] {
   def writer(method: KeyIndexMethod[GridKey], props: Parameters)(implicit sc: SparkContext) =
-    HadoopLayerWriter(props("path")).writer[GridKey, Tile, RasterMetadata[GridKey]](method)
+    HadoopLayerWriter(props("path")).writer[GridKey, Tile, LayerMetadata[GridKey]](method)
 }

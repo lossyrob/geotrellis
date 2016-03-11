@@ -9,7 +9,7 @@ import geotrellis.spark._
 import org.scalatest._
 
 class S3GridKeySpec
-  extends PersistenceSpec[GridKey, Tile, RasterMetadata[GridKey]]
+  extends PersistenceSpec[GridKey, Tile, LayerMetadata[GridKey]]
     with GridKeyIndexMethods
     with TestEnvironment with TestFiles
     with AllOnesTestTileTests {

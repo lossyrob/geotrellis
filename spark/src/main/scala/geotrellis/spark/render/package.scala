@@ -9,7 +9,7 @@ import org.apache.spark.rdd.RDD
 
 
 package object render {
-  implicit class SpatialRasterRDDRenderMethods(rdd: RasterRDD[GridKey]) {
+  implicit class SpatialTileLayerRDDRenderMethods(rdd: TileLayerRDD[GridKey]) {
     /**
      * Renders each tile as a PNG.
      *

@@ -10,7 +10,7 @@ import com.github.nscala_time.time.Imports._
 import org.joda.time.DateTime
 
 class HadoopGridTimeKeySpec
-  extends PersistenceSpec[GridTimeKey, Tile, RasterMetadata[GridTimeKey]]
+  extends PersistenceSpec[GridTimeKey, Tile, LayerMetadata[GridTimeKey]]
     with GridTimeKeyIndexMethods
     with TestEnvironment
     with TestFiles

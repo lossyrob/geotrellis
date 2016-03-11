@@ -14,7 +14,7 @@ import org.apache.spark.rdd.RDD
 import com.github.nscala_time.time.Imports._
 import scala.collection.mutable
 
-trait RasterRDDBuilders {
+trait TileLayerRDDBuilders {
 
   lazy val defaultCRS = LatLng
 
@@ -24,12 +24,12 @@ trait RasterRDDBuilders {
     *
     * Metadata mapTransform is accurate.
     */
-  def createRasterRDD(
+  def createTileLayerRDD(
     input: Raster[Tile],
     layoutCols: Int,
     layoutRows: Int
-  )(implicit sc: SparkContext): (Raster[Tile], RasterRDD[GridKey]) =
-    createRasterRDD(input, layoutCols, layoutRows, defaultCRS)
+  )(implicit sc: SparkContext): (Raster[Tile], TileLayerRDD[GridKey]) =
+    createTileLayerRDD(input, layoutCols, layoutRows, defaultCRS)
 
   /** Cuts the raster according to the layoutCols and layoutRows given.
     * Returns the raser that was used to fit inside the tile layout, which might
@@ -37,12 +37,12 @@ trait RasterRDDBuilders {
     *
     * Metadata mapTransform is accurate.
     */
-  def createRasterRDD(
+  def createTileLayerRDD(
     raster: Raster[Tile],
     layoutCols: Int,
     layoutRows: Int,
     crs: CRS
-  )(implicit sc: SparkContext): (Raster[Tile], RasterRDD[GridKey]) = {
+  )(implicit sc: SparkContext): (Raster[Tile], TileLayerRDD[GridKey]) = {
     val Raster(input, extent) = raster
     val (cols, rows) = (input.cols, input.rows)
 
@@ -61,30 +61,30 @@ trait RasterRDDBuilders {
     val e = raster.rasterExtent.extentFor(GridBounds(0, 0, tile.cols - 1, tile.rows - 1))
 
     val resultRaster = Raster(tile, e)
-    (resultRaster, createRasterRDD(sc, resultRaster, tileLayout, crs))
+    (resultRaster, createTileLayerRDD(sc, resultRaster, tileLayout, crs))
   }
 
   /** Cuts the tile according to the layoutCols and layoutRows given.
     * Returns the tile that was used to fit inside the tile layout, which might
     * be smaller than the input tile
     */
-  def createRasterRDD(
+  def createTileLayerRDD(
     input: Tile,
     layoutCols: Int,
     layoutRows: Int
-  )(implicit sc: SparkContext): (Tile, RasterRDD[GridKey]) =
-    createRasterRDD(input, layoutCols, layoutRows, defaultCRS)
+  )(implicit sc: SparkContext): (Tile, TileLayerRDD[GridKey]) =
+    createTileLayerRDD(input, layoutCols, layoutRows, defaultCRS)
 
   /** Cuts the tile according to the layoutCols and layoutRows given.
     * Returns the tile that was used to fit inside the tile layout, which might
     * be smaller than the input tile
     */
-  def createRasterRDD(
+  def createTileLayerRDD(
     input: Tile,
     layoutCols: Int,
     layoutRows: Int,
     crs: CRS
-  )(implicit sc: SparkContext): (Tile, RasterRDD[GridKey]) = {
+  )(implicit sc: SparkContext): (Tile, TileLayerRDD[GridKey]) = {
     val (cols, rows) = (input.cols, input.rows)
 
     val tileLayout =
@@ -99,60 +99,60 @@ trait RasterRDDBuilders {
       } else
         input
 
-    (tile, createRasterRDD(sc, tile, tileLayout, crs))
+    (tile, createTileLayerRDD(sc, tile, tileLayout, crs))
   }
 
-  def createRasterRDD(
+  def createTileLayerRDD(
     tile: Tile,
     tileLayout: TileLayout
-  )(implicit sc: SparkContext): RasterRDD[GridKey] =
-    createRasterRDD(sc, tile, tileLayout)
+  )(implicit sc: SparkContext): TileLayerRDD[GridKey] =
+    createTileLayerRDD(sc, tile, tileLayout)
 
-  def createRasterRDD(
+  def createTileLayerRDD(
     sc: SparkContext,
     tile: Tile,
     tileLayout: TileLayout
-  ): RasterRDD[GridKey] =
-    createRasterRDD(sc, tile, tileLayout, defaultCRS)
+  ): TileLayerRDD[GridKey] =
+    createTileLayerRDD(sc, tile, tileLayout, defaultCRS)
 
-  def createRasterRDD(
+  def createTileLayerRDD(
     sc: SparkContext,
     tile: Tile,
     tileLayout: TileLayout,
     crs: CRS
-  ): RasterRDD[GridKey] = {
+  ): TileLayerRDD[GridKey] = {
     val extent = crs.worldExtent
-    createRasterRDD(sc, Raster(tile, extent), tileLayout, crs)
+    createTileLayerRDD(sc, Raster(tile, extent), tileLayout, crs)
   }
 
-  def createRasterRDD(
+  def createTileLayerRDD(
     sc: SparkContext,
     raster: Raster[Tile],
     tileLayout: TileLayout
-  ): RasterRDD[GridKey] =
-    createRasterRDD(sc, raster, tileLayout, defaultCRS)
+  ): TileLayerRDD[GridKey] =
+    createTileLayerRDD(sc, raster, tileLayout, defaultCRS)
 
-  def createRasterRDD(
+  def createTileLayerRDD(
     sc: SparkContext,
     raster: Raster[Tile],
     tileLayout: TileLayout,
     crs: CRS
-  ): RasterRDD[GridKey] = {
+  ): TileLayerRDD[GridKey] = {
     val layoutScheme = FloatingLayoutScheme(tileLayout.tileCols, tileLayout.tileRows)
     val inputRdd = sc.parallelize(Seq((ProjectedExtent(raster.extent, crs), raster.tile)))
 
     val (_, metadata) =
-      RasterMetadata.fromRdd(inputRdd, crs, layoutScheme)
+      LayerMetadata.fromRdd(inputRdd, crs, layoutScheme)
 
     val tiled: RDD[(GridKey, Tile)] = inputRdd.cutTiles(metadata)
 
     new ContextRDD(tiled, metadata)
   }
 
-  def createGridTimeKeyRasterRDD(
+  def createGridTimeKeyTileLayerRDD(
     tiles: Traversable[(Tile, DateTime)],
     tileLayout: TileLayout,
-    cellType: CellType = IntConstantNoDataCellType)(implicit sc: SparkContext): RasterRDD[GridTimeKey] = {
+    cellType: CellType = IntConstantNoDataCellType)(implicit sc: SparkContext): TileLayerRDD[GridTimeKey] = {
 
     val extent = defaultCRS.worldExtent
     val layout = LayoutDefinition(extent, tileLayout)
@@ -162,7 +162,7 @@ trait RasterRDDBuilders {
       val maxTime = tiles.maxBy(_._2)._2
       KeyBounds(GridTimeKey(colMin, rowMin, minTime), GridTimeKey(colMax, rowMax, maxTime))
     }
-    val metadata = RasterMetadata(
+    val metadata = LayerMetadata(
       cellType,
       layout,
       extent,
