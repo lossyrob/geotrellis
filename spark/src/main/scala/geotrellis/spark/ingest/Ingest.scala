@@ -38,8 +38,8 @@ object Ingest {
    * The ingest process has the following steps:
    *
    *  - Reproject tiles to the desired CRS:  (CRS, RDD[(Extent, CRS), Tile)]) -> RDD[(Extent, Tile)]
-   *  - Determine the appropriate layer meta data for the layer. (CRS, LayoutScheme, RDD[(Extent, Tile)]) -> LayerMetadata)
-   *  - Resample the rasters into the desired tile format. RDD[(Extent, Tile)] => RasterRDD[K]
+   *  - Determine the appropriate layer meta data for the layer. (CRS, LayoutScheme, RDD[(Extent, Tile)]) -> TileLayerMetadata)
+   *  - Resample the rasters into the desired tile format. RDD[(Extent, Tile)] => TileLayerRDD[K]
    *  - Optionally pyramid to top zoom level, calling sink at each level
    *
    * Ingesting is abstracted over the following variants:
@@ -53,10 +53,10 @@ object Ingest {
    * @param cacheLevel    Storage level to use for RDD caching
    * @param sink          function that utilize the result of the ingest, assumed to force materialization of the RDD
    * @tparam T            type of input tile key
-   * @tparam K            type of output tile key, must have SpatialComponent
+   * @tparam K            type of output tile key, must have GridComponent
    * @return
    */
-  def apply[T: ClassTag: ? => TilerKeyMethods[T, K]: Component[?, ProjectedExtent], K: SpatialComponent: Boundable: ClassTag](
+  def apply[T: ClassTag: ? => TilerKeyMethods[T, K]: Component[?, ProjectedExtent], K: GridComponent: Boundable: ClassTag](
       sourceTiles: RDD[(T, Tile)],
       destCRS: CRS,
       layoutScheme: LayoutScheme,
@@ -66,15 +66,15 @@ object Ingest {
       partitioner: Option[Partitioner] = None,
       bufferSize: Option[Int] = None
     )
-    (sink: (RasterRDD[K], Int) => Unit): Unit =
+    (sink: (TileLayerRDD[K], Int) => Unit): Unit =
   {
-    val (_, rasterMetaData) = RasterMetaData.fromRdd(sourceTiles, layoutScheme)
-    val tiledRdd = sourceTiles.tileToLayout(rasterMetaData, resampleMethod).cache()
-    val contextRdd = new ContextRDD(tiledRdd, rasterMetaData)
+    val (_, rasterMetadata) = TileLayerMetadata.fromRdd(sourceTiles, layoutScheme)
+    val tiledRdd = sourceTiles.tileToLayout(rasterMetadata, resampleMethod).cache()
+    val contextRdd = new ContextRDD(tiledRdd, rasterMetadata)
     val (zoom, rasterRdd) = bufferSize.fold(contextRdd.reproject(destCRS, layoutScheme))(contextRdd.reproject(destCRS, layoutScheme, _))
     rasterRdd.persist(cacheLevel)
 
-    def buildPyramid(zoom: Int, rdd: RasterRDD[K]): List[(Int, RasterRDD[K])] = {
+    def buildPyramid(zoom: Int, rdd: TileLayerRDD[K]): List[(Int, TileLayerRDD[K])] = {
       if (zoom >= 1) {
         rdd.persist(cacheLevel)
         sink(rdd, zoom)

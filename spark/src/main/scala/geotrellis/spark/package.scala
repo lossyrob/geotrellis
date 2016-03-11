@@ -46,7 +46,7 @@ package object spark
     with stitch.Implicits
     with mapalgebra.Implicits
     with mapalgebra.local.Implicits
-    with mapalgebra.local.temporal.Implicits
+    with mapalgebra.local.time.Implicits
     with mapalgebra.focal.Implicits
     with mapalgebra.zonal.Implicits
     with summary.polygonal.Implicits
@@ -57,16 +57,16 @@ package object spark
     with filter.Implicits
     with Serializable // required for java serialization, even though it's mixed in
 {
-  type RasterRDD[K] = RDD[(K, Tile)] with Metadata[RasterMetaData[K]]
+  type TileLayerRDD[K] = RDD[(K, Tile)] with Metadata[TileLayerMetadata[K]]
 
-  object RasterRDD {
-    def apply[K](rdd: RDD[(K, Tile)], metadata: RasterMetaData[K]): RasterRDD[K] =
+  object TileLayerRDD {
+    def apply[K](rdd: RDD[(K, Tile)], metadata: TileLayerMetadata[K]): TileLayerRDD[K] =
       new ContextRDD(rdd, metadata)
   }
 
-  type MultiBandRasterRDD[K] = RDD[(K, MultiBandTile)] with Metadata[RasterMetaData[K]]
-  object MultiBandRasterRDD {
-    def apply[K](rdd: RDD[(K, MultiBandTile)], metadata: RasterMetaData[K]): MultiBandRasterRDD[K] =
+  type MultibandTileLayerRDD[K] = RDD[(K, MultibandTile)] with Metadata[TileLayerMetadata[K]]
+  object MultibandTileLayerRDD {
+    def apply[K](rdd: RDD[(K, MultibandTile)], metadata: TileLayerMetadata[K]): MultibandTileLayerRDD[K] =
       new ContextRDD(rdd, metadata)
   }
 
@@ -92,8 +92,8 @@ package object spark
       component.set(value)(self)
   }
 
-  type SpatialComponent[K] = Component[K, SpatialKey]
-  type TemporalComponent[K] = Component[K, TemporalKey]
+  type GridComponent[K] = Component[K, GridKey]
+  type TimeComponent[K] = Component[K, TimeKey]
 
   type TileBounds = GridBounds
 
@@ -117,14 +117,14 @@ package object spark
   implicit class withContextRDDMethods[K: ClassTag, V: ClassTag, M](rdd: RDD[(K, V)] with Metadata[M])
     extends ContextRDDMethods[K, V, M](rdd)
 
-  implicit class withRasterRDDMethods[K](val self: RasterRDD[K])(implicit val keyClassTag: ClassTag[K])
-    extends RasterRDDMethods[K]
+  implicit class withTileLayerRDDMethods[K](val self: TileLayerRDD[K])(implicit val keyClassTag: ClassTag[K])
+    extends TileLayerRDDMethods[K]
 
-  implicit class withRasterRDDMaskMethods[K: SpatialComponent: ClassTag](val self: RasterRDD[K])
-      extends mask.RasterRDDMaskMethods[K]
+  implicit class withTileLayerRDDMaskMethods[K: GridComponent: ClassTag](val self: TileLayerRDD[K])
+      extends mask.TileLayerRDDMaskMethods[K]
 
-  implicit class withMultiBandRasterRDDMethods[K](val self: MultiBandRasterRDD[K])(implicit val keyClassTag: ClassTag[K])
-    extends MultiBandRasterRDDMethods[K]
+  implicit class withMultibandTileLayerRDDMethods[K](val self: MultibandTileLayerRDD[K])(implicit val keyClassTag: ClassTag[K])
+    extends MultibandTileLayerRDDMethods[K]
 
   implicit class withProjectedExtentRDDMethods[K: Component[?, ProjectedExtent], V <: CellGrid](val rdd: RDD[(K, V)]) {
     def toRasters: RDD[(K, Raster[V])] =
@@ -135,25 +135,25 @@ package object spark
       }, preservesPartitioning = true)
   }
 
-  implicit class withProjectedExtentTemporalTilerKeyMethods[K: Component[?, ProjectedExtent]: Component[?, TemporalKey]](val self: K) extends TilerKeyMethods[K, SpaceTimeKey] {
+  implicit class withProjectedExtentTimeTilerKeyMethods[K: Component[?, ProjectedExtent]: Component[?, TimeKey]](val self: K) extends TilerKeyMethods[K, GridTimeKey] {
     def extent = self.getComponent[ProjectedExtent].extent
-    def translate(spatialKey: SpatialKey): SpaceTimeKey = SpaceTimeKey(spatialKey, self.getComponent[TemporalKey])
+    def translate(spatialKey: GridKey): GridTimeKey = GridTimeKey(spatialKey, self.getComponent[TimeKey])
   }
 
-  implicit class withProjectedExtentTilerKeyMethods[K: Component[?, ProjectedExtent]](val self: K) extends TilerKeyMethods[K, SpatialKey] {
+  implicit class withProjectedExtentTilerKeyMethods[K: Component[?, ProjectedExtent]](val self: K) extends TilerKeyMethods[K, GridKey] {
     def extent = self.getComponent[ProjectedExtent].extent
-    def translate(spatialKey: SpatialKey) = spatialKey
+    def translate(spatialKey: GridKey) = spatialKey
   }
 
   implicit class withCollectMetadataMethods[K1, V <: CellGrid](rdd: RDD[(K1, V)]) extends Serializable {
-    def collectMetaData[K2: Boundable: SpatialComponent](crs: CRS, layoutScheme: LayoutScheme)
-        (implicit ev: K1 => TilerKeyMethods[K1, K2]): (Int, RasterMetaData[K2]) = {
-      RasterMetaData.fromRdd(rdd, crs, layoutScheme)
+    def collectMetadata[K2: Boundable: GridComponent](crs: CRS, layoutScheme: LayoutScheme)
+        (implicit ev: K1 => TilerKeyMethods[K1, K2]): (Int, TileLayerMetadata[K2]) = {
+      TileLayerMetadata.fromRdd(rdd, crs, layoutScheme)
     }
 
-    def collectMetaData[K2: Boundable: SpatialComponent](crs: CRS, layout: LayoutDefinition)
-        (implicit ev: K1 => TilerKeyMethods[K1, K2]): RasterMetaData[K2] = {
-      RasterMetaData.fromRdd(rdd, crs, layout)
+    def collectMetadata[K2: Boundable: GridComponent](crs: CRS, layout: LayoutDefinition)
+        (implicit ev: K1 => TilerKeyMethods[K1, K2]): TileLayerMetadata[K2] = {
+      TileLayerMetadata.fromRdd(rdd, crs, layout)
     }
   }
 }

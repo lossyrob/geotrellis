@@ -1,9 +1,7 @@
 package geotrellis.spark.io.json
 
 import geotrellis.spark._
-import geotrellis.spark.io.index
 import geotrellis.spark.tiling.LayoutDefinition
-import geotrellis.spark.util._
 import geotrellis.proj4.CRS
 import geotrellis.raster._
 import geotrellis.raster.io.json._
@@ -13,8 +11,6 @@ import geotrellis.vector.io.json._
 import com.github.nscala_time.time.Imports._
 import org.apache.avro.Schema
 import spray.json._
-
-import scala.reflect.ClassTag
 
 object Implicits extends Implicits
 
@@ -64,20 +60,20 @@ trait Implicits extends KeyFormats with KeyIndexFormats {
       }
   }
 
-  implicit def rasterMetaDataFormat[K: JsonFormat] = new RootJsonFormat[RasterMetaData[K]] {
-    def write(metaData: RasterMetaData[K]) =
+  implicit def rasterMetadataFormat[K: JsonFormat] = new RootJsonFormat[TileLayerMetadata[K]] {
+    def write(metadata: TileLayerMetadata[K]) =
       JsObject(
-        "cellType" -> metaData.cellType.toJson,
-        "extent" -> metaData.extent.toJson,
-        "layoutDefinition" -> metaData.layout.toJson,
-        "crs" -> metaData.crs.toJson,
-        "bounds" -> metaData.bounds.get.toJson // we will only store non-empty bounds
+        "cellType" -> metadata.cellType.toJson,
+        "extent" -> metadata.extent.toJson,
+        "layoutDefinition" -> metadata.layout.toJson,
+        "crs" -> metadata.crs.toJson,
+        "bounds" -> metadata.bounds.get.toJson // we will only store non-empty bounds
       )
 
-    def read(value: JsValue): RasterMetaData[K] =
+    def read(value: JsValue): TileLayerMetadata[K] =
       value.asJsObject.getFields("cellType", "extent", "layoutDefinition", "crs", "bounds") match {
         case Seq(cellType, extent, layoutDefinition, crs, bounds) =>
-          RasterMetaData(
+          TileLayerMetadata(
             cellType.convertTo[CellType],
             layoutDefinition.convertTo[LayoutDefinition],
             extent.convertTo[Extent],
@@ -85,7 +81,7 @@ trait Implicits extends KeyFormats with KeyIndexFormats {
             bounds.convertTo[KeyBounds[K]]
           )
         case _ =>
-          throw new DeserializationException("RasterMetaData expected")
+          throw new DeserializationException("TileLayerMetadata expected")
       }
   }
 

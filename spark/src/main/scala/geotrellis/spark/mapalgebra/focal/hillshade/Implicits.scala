@@ -7,7 +7,7 @@ import reflect.ClassTag
 object Implicits extends Implicits
 
 trait Implicits  {
-  implicit class withElevationRasterRDDMethods[K](val self: RasterRDD[K])
-    (implicit val keyClassTag: ClassTag[K], implicit val _sc: SpatialComponent[K])
-      extends HillshadeRasterRDDMethods[K] with Serializable
+  implicit class withElevationTileLayerRDDMethods[K](val self: TileLayerRDD[K])
+    (implicit val keyClassTag: ClassTag[K], implicit val _sc: GridComponent[K])
+      extends HillshadeTileLayerRDDMethods[K] with Serializable
 }

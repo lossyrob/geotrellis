@@ -30,7 +30,7 @@ object Etl {
 
   def ingest[
     I: Component[?, ProjectedExtent]: TypeTag: ? => TilerKeyMethods[I, K],
-    K: SpatialComponent: Boundable: TypeTag,
+    K: GridComponent: Boundable: TypeTag,
     V <: CellGrid: TypeTag: Stitcher: (? => TileReprojectMethods[V]): (? => CropMethods[V]): (? => TileMergeMethods[V]): (? => TilePrototypeMethods[V])
   ](
     args: Seq[String], keyIndexMethod: KeyIndexMethod[K], modules: Seq[TypedModule] = Etl.defaultModules
@@ -95,7 +95,7 @@ case class Etl(args: Seq[String], @transient modules: Seq[TypedModule] = Etl.def
     * If multiple rasters contribute to single target tile their values will be merged cell by cell.
     *
     * The timing of the reproject steps depends on the method chosen.
-    * BufferedReproject must be performed after the tiling step because it leans on SpatialComponent to identify neighboring
+    * BufferedReproject must be performed after the tiling step because it leans on GridComponent to identify neighboring
     * tiles and sample their edge pixels. This method is the default and produces the best results.
     *
     * PerTileReproject method will be performed before the tiling step, on source tiles. When using this method the
@@ -109,30 +109,30 @@ case class Etl(args: Seq[String], @transient modules: Seq[TypedModule] = Etl.def
     I: Component[?, ProjectedExtent]: (? => TilerKeyMethods[I, K]),
     V <: CellGrid: Stitcher: ClassTag: (? => TileMergeMethods[V]): (? => TilePrototypeMethods[V]):
     (? => TileReprojectMethods[V]): (? => CropMethods[V]),
-    K: SpatialComponent: Boundable: ClassTag
+    K: GridComponent: Boundable: ClassTag
   ](
     rdd: RDD[(I, V)], method: ResampleMethod = NearestNeighbor
-  )(implicit sc: SparkContext): (Int, RDD[(K, V)] with Metadata[RasterMetaData[K]]) = {
+  )(implicit sc: SparkContext): (Int, RDD[(K, V)] with Metadata[TileLayerMetadata[K]]) = {
     val targetCellType = conf.cellType.get
     val destCrs = conf.crs()
 
-    def adjustCellType(md: RasterMetaData[K]) =
+    def adjustCellType(md: TileLayerMetadata[K]) =
       md.copy(cellType = targetCellType.getOrElse(md.cellType))
 
     conf.reproject() match {
       case PerTileReproject =>
         val reprojected = rdd.reproject(destCrs)
-        val (zoom: Int, md: RasterMetaData[K]) = scheme match {
+        val (zoom: Int, md: TileLayerMetadata[K]) = scheme match {
           case Left(layoutScheme) =>
-            RasterMetaData.fromRdd(rdd, layoutScheme)
+            TileLayerMetadata.fromRdd(rdd, layoutScheme)
           case Right(layoutDefinition) =>
-            RasterMetaData.fromRdd(rdd, layoutDefinition)
+            TileLayerMetadata.fromRdd(rdd, layoutDefinition)
         }
         val amd = adjustCellType(md)
         zoom -> ContextRDD(reprojected.tileToLayout[K](amd, method), amd)
 
       case BufferedReproject =>
-        val (_, md) = RasterMetaData.fromRdd(rdd, FloatingLayoutScheme(conf.tileSize()))
+        val (_, md) = TileLayerMetadata.fromRdd(rdd, FloatingLayoutScheme(conf.tileSize()))
         val amd = adjustCellType(md)
         val tiled = ContextRDD(rdd.tileToLayout[K](amd, method), amd)
         scheme match {
@@ -149,25 +149,25 @@ case class Etl(args: Seq[String], @transient modules: Seq[TypedModule] = Etl.def
     * This step may perform two to one pyramiding until zoom level 1 is reached.
     *
     * @param id     Layout ID to b
-    * @param rdd Tiled raster RDD with RasterMetadata
+    * @param rdd Tiled raster RDD with TileLayerMetadata
     * @param method Index Method that maps an instance of K to a Long
-    * @tparam K  Key type with SpatialComponent corresponding LayoutDefinition
+    * @tparam K  Key type with GridComponent corresponding LayoutDefinition
     * @tparam V  Tile raster with cells from single tile in LayoutDefinition
     */
   def save[
-    K: SpatialComponent: TypeTag,
+    K: GridComponent: TypeTag,
     V <: CellGrid: TypeTag: ? => TileMergeMethods[V]: ? => TilePrototypeMethods[V]
-  ](id: LayerId, rdd: RDD[(K, V)] with Metadata[RasterMetaData[K]], method: KeyIndexMethod[K]): Unit = {
+  ](id: LayerId, rdd: RDD[(K, V)] with Metadata[TileLayerMetadata[K]], method: KeyIndexMethod[K]): Unit = {
     implicit def classTagK = ClassTag(typeTag[K].mirror.runtimeClass(typeTag[K].tpe)).asInstanceOf[ClassTag[K]]
     implicit def classTagV = ClassTag(typeTag[V].mirror.runtimeClass(typeTag[V].tpe)).asInstanceOf[ClassTag[V]]
 
     val outputPlugin =
       combinedModule
-        .findSubclassOf[OutputPlugin[K, V, RasterMetaData[K]]]
+        .findSubclassOf[OutputPlugin[K, V, TileLayerMetadata[K]]]
         .find { _.suitableFor(conf.output()) }
         .getOrElse(sys.error(s"Unable to find output module of type '${conf.output()}'"))
 
-    def savePyramid(zoom: Int, rdd: RDD[(K, V)] with Metadata[RasterMetaData[K]]): Unit = {
+    def savePyramid(zoom: Int, rdd: RDD[(K, V)] with Metadata[TileLayerMetadata[K]]): Unit = {
       val currentId = id.copy(zoom = zoom)
       outputPlugin(currentId, rdd, method, conf.outputProps)
 

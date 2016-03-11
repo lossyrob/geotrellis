@@ -17,8 +17,8 @@ This affords an opportunity to modify the dataset using any of the GeoTrellis op
 ## Sample ETL Application
 
 ```scala
-import geotrellis.raster.{Tile, MultiBandTile}
-import geotrellis.spark.{LayerId, SpatialKey}
+import geotrellis.raster.{Tile, MultibandTile}
+import geotrellis.spark.{LayerId, GridKey}
 import geotrellis.spark.etl.Etl
 import geotrellis.spark.io.index.ZCurveKeyIndexMethod
 import geotrellis.spark.util.SparkUtils

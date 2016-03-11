@@ -18,7 +18,7 @@ package geotrellis.spark.mapalgebra.local
 
 import geotrellis.spark._
 import geotrellis.spark.io.hadoop._
-import geotrellis.spark.RasterRDD
+import geotrellis.spark.TileLayerRDD
 import geotrellis.spark.testfiles._
 
 import org.scalatest.FunSpec
@@ -30,9 +30,9 @@ class XorSpec extends FunSpec with TestEnvironment with TestFiles {
     val twos = AllTwosTestFile
     val hundreds = AllHundredsTestFile
 
-    val onesST = AllOnesSpaceTime
-    val twosST = AllTwosSpaceTime
-    val hundredsST = AllHundredsSpaceTime
+    val onesST = AllOnesGridTimeKey
+    val twosST = AllTwosGridTimeKey
+    val hundredsST = AllHundredsGridTimeKey
 
     it("should xor a raster with a constant") {
       val res = ones ^ 1
