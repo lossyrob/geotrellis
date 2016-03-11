@@ -8,7 +8,7 @@ import geotrellis.spark.io.s3.S3LayerWriter
 
 import org.apache.spark.SparkContext
 
-class GridKeyS3Output extends S3Output[GridKey, Tile, LayerMetadata[GridKey]] {
+class GridKeyS3Output extends S3Output[GridKey, Tile, TileLayerMetadata[GridKey]] {
   def writer(method: KeyIndexMethod[GridKey], props: Parameters)(implicit sc: SparkContext) =
-    S3LayerWriter(props("bucket"), props("key")).writer[GridKey, Tile, LayerMetadata[GridKey]](method)
+    S3LayerWriter(props("bucket"), props("key")).writer[GridKey, Tile, TileLayerMetadata[GridKey]](method)
 }

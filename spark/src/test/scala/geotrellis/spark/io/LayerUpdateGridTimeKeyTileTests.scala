@@ -14,10 +14,10 @@ import geotrellis.proj4.LatLng
 import org.apache.spark.rdd._
 import org.joda.time.DateTime
 
-trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuilders { self: PersistenceSpec[GridTimeKey, Tile, LayerMetadata[GridTimeKey]] with TestEnvironment =>
+trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuilders { self: PersistenceSpec[GridTimeKey, Tile, TileLayerMetadata[GridTimeKey]] with TestEnvironment =>
 
-  def dummyLayerMetadata =
-    LayerMetadata(
+  def dummyTileLayerMetadata =
+    TileLayerMetadata(
       IntConstantNoDataCellType,
       LayoutDefinition(RasterExtent(Extent(0,0,1,1), 1, 1), 1),
       Extent(0,0,1,1),
@@ -25,8 +25,8 @@ trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuil
       KeyBounds(GridTimeKey(0,0, new DateTime()), GridTimeKey(1,1, new DateTime()))
     )
 
-  def emptyLayerMetadata =
-    LayerMetadata[GridTimeKey](
+  def emptyTileLayerMetadata =
+    TileLayerMetadata[GridTimeKey](
       IntConstantNoDataCellType,
       LayoutDefinition(RasterExtent(Extent(0,0,1,1), 1, 1), 1),
       Extent(0,0,1,1),
@@ -44,7 +44,7 @@ trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuil
 
       it("should not update a layer (empty set)") {
         intercept[EmptyBoundsError] {
-          updater.update(layerId, new ContextRDD[GridTimeKey, Tile, LayerMetadata[GridTimeKey]](sc.emptyRDD[(GridTimeKey, Tile)], emptyLayerMetadata))
+          updater.update(layerId, new ContextRDD[GridTimeKey, Tile, TileLayerMetadata[GridTimeKey]](sc.emptyRDD[(GridTimeKey, Tile)], emptyTileLayerMetadata))
         }
       }
 
@@ -55,7 +55,7 @@ trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuil
         val update = new ContextRDD(sc.parallelize(
           (minKey.setComponent(GridKey(minKey.col - 1, minKey.row - 1)), minTile) ::
             (minKey.setComponent(GridKey(maxKey.col + 1, maxKey.row + 1)), maxTile) :: Nil
-        ), dummyLayerMetadata)
+        ), dummyTileLayerMetadata)
 
         intercept[LayerOutOfKeyBoundsError] {
           updater.update(layerId, update)
@@ -82,7 +82,7 @@ trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuil
         assert(rdd.count == 4)
 
         writer.write(id, rdd, keyIndexMethod)
-        assert(reader.read[GridTimeKey, Tile, LayerMetadata[GridTimeKey]](id).count == 4)
+        assert(reader.read[GridTimeKey, Tile, TileLayerMetadata[GridTimeKey]](id).count == 4)
 
         val updateRdd =
           createGridTimeKeyTileLayerRDD(
@@ -93,7 +93,7 @@ trait LayerUpdateGridTimeKeyTileTests extends TileLayerRDDBuilders with TileBuil
         assert(updateRdd.count == 1)
         updateRdd.withContext(_.mapValues { tile => tile + 1 })
 
-        updater.update[GridTimeKey, Tile, LayerMetadata[GridTimeKey]](id, updateRdd)
+        updater.update[GridTimeKey, Tile, TileLayerMetadata[GridTimeKey]](id, updateRdd)
 
         val read: TileLayerRDD[GridTimeKey] = reader.read(id)
 

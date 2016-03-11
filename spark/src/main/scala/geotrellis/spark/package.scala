@@ -57,16 +57,16 @@ package object spark
     with filter.Implicits
     with Serializable // required for java serialization, even though it's mixed in
 {
-  type TileLayerRDD[K] = RDD[(K, Tile)] with Metadata[LayerMetadata[K]]
+  type TileLayerRDD[K] = RDD[(K, Tile)] with Metadata[TileLayerMetadata[K]]
 
   object TileLayerRDD {
-    def apply[K](rdd: RDD[(K, Tile)], metadata: LayerMetadata[K]): TileLayerRDD[K] =
+    def apply[K](rdd: RDD[(K, Tile)], metadata: TileLayerMetadata[K]): TileLayerRDD[K] =
       new ContextRDD(rdd, metadata)
   }
 
-  type MultibandTileLayerRDD[K] = RDD[(K, MultibandTile)] with Metadata[LayerMetadata[K]]
+  type MultibandTileLayerRDD[K] = RDD[(K, MultibandTile)] with Metadata[TileLayerMetadata[K]]
   object MultibandTileLayerRDD {
-    def apply[K](rdd: RDD[(K, MultibandTile)], metadata: LayerMetadata[K]): MultibandTileLayerRDD[K] =
+    def apply[K](rdd: RDD[(K, MultibandTile)], metadata: TileLayerMetadata[K]): MultibandTileLayerRDD[K] =
       new ContextRDD(rdd, metadata)
   }
 
@@ -147,13 +147,13 @@ package object spark
 
   implicit class withCollectMetadataMethods[K1, V <: CellGrid](rdd: RDD[(K1, V)]) extends Serializable {
     def collectMetadata[K2: Boundable: GridComponent](crs: CRS, layoutScheme: LayoutScheme)
-        (implicit ev: K1 => TilerKeyMethods[K1, K2]): (Int, LayerMetadata[K2]) = {
-      LayerMetadata.fromRdd(rdd, crs, layoutScheme)
+        (implicit ev: K1 => TilerKeyMethods[K1, K2]): (Int, TileLayerMetadata[K2]) = {
+      TileLayerMetadata.fromRdd(rdd, crs, layoutScheme)
     }
 
     def collectMetadata[K2: Boundable: GridComponent](crs: CRS, layout: LayoutDefinition)
-        (implicit ev: K1 => TilerKeyMethods[K1, K2]): LayerMetadata[K2] = {
-      LayerMetadata.fromRdd(rdd, crs, layout)
+        (implicit ev: K1 => TilerKeyMethods[K1, K2]): TileLayerMetadata[K2] = {
+      TileLayerMetadata.fromRdd(rdd, crs, layout)
     }
   }
 }

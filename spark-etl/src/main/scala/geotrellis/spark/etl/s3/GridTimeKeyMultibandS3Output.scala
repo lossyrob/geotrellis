@@ -7,7 +7,7 @@ import geotrellis.spark.io.s3._
 import geotrellis.spark.io.index.KeyIndexMethod
 import org.apache.spark.SparkContext
 
-class GridTimeKeyMultibandS3Output extends S3Output[GridTimeKey, MultibandTile, LayerMetadata[GridTimeKey]] {
+class GridTimeKeyMultibandS3Output extends S3Output[GridTimeKey, MultibandTile, TileLayerMetadata[GridTimeKey]] {
   def writer(method: KeyIndexMethod[GridTimeKey], props: Parameters)(implicit sc: SparkContext) =
-    S3LayerWriter(props("bucket"), props("key")).writer[GridTimeKey, MultibandTile, LayerMetadata[GridTimeKey]](method)
+    S3LayerWriter(props("bucket"), props("key")).writer[GridTimeKey, MultibandTile, TileLayerMetadata[GridTimeKey]](method)
 }

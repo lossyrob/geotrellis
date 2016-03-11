@@ -9,7 +9,7 @@ import geotrellis.spark.testfiles.TestFiles
 import com.github.nscala_time.time.Imports._
 
 class FileGridTimeKeySpec
-    extends PersistenceSpec[GridTimeKey, Tile, LayerMetadata[GridTimeKey]]
+    extends PersistenceSpec[GridTimeKey, Tile, TileLayerMetadata[GridTimeKey]]
     with GridTimeKeyIndexMethods
     with TestEnvironment
     with TestFiles

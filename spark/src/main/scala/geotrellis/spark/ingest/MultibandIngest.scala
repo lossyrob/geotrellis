@@ -25,7 +25,7 @@ object MultibandIngest {
     bufferSize: Option[Int] = None)
     (sink: (MultibandTileLayerRDD[K], Int) => Unit): Unit =
   {
-    val (_, rasterMetadata) = LayerMetadata.fromRdd(sourceTiles, layoutScheme)
+    val (_, rasterMetadata) = TileLayerMetadata.fromRdd(sourceTiles, layoutScheme)
     val tiledRdd = sourceTiles.tileToLayout(rasterMetadata, resampleMethod).cache()
     val contextRdd = new ContextRDD(tiledRdd, rasterMetadata)
     val (zoom, rasterRdd) = bufferSize.fold(contextRdd.reproject(destCRS, layoutScheme))(contextRdd.reproject(destCRS, layoutScheme, _))

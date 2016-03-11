@@ -8,7 +8,7 @@ import geotrellis.spark.io.index.KeyIndexMethod
 
 import org.apache.spark.SparkContext
 
-class GridKeyAccumuloOutput extends AccumuloOutput[GridKey, Tile, LayerMetadata[GridKey]] {
+class GridKeyAccumuloOutput extends AccumuloOutput[GridKey, Tile, TileLayerMetadata[GridKey]] {
   def writer(method: KeyIndexMethod[GridKey], props: Parameters)(implicit sc: SparkContext) =
-    AccumuloLayerWriter(getInstance(props), props("table"), strategy(props)).writer[GridKey, Tile, LayerMetadata[GridKey]](method)
+    AccumuloLayerWriter(getInstance(props), props("table"), strategy(props)).writer[GridKey, Tile, TileLayerMetadata[GridKey]](method)
 }

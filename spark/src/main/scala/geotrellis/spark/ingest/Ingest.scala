@@ -38,7 +38,7 @@ object Ingest {
    * The ingest process has the following steps:
    *
    *  - Reproject tiles to the desired CRS:  (CRS, RDD[(Extent, CRS), Tile)]) -> RDD[(Extent, Tile)]
-   *  - Determine the appropriate layer meta data for the layer. (CRS, LayoutScheme, RDD[(Extent, Tile)]) -> LayerMetadata)
+   *  - Determine the appropriate layer meta data for the layer. (CRS, LayoutScheme, RDD[(Extent, Tile)]) -> TileLayerMetadata)
    *  - Resample the rasters into the desired tile format. RDD[(Extent, Tile)] => TileLayerRDD[K]
    *  - Optionally pyramid to top zoom level, calling sink at each level
    *
@@ -68,7 +68,7 @@ object Ingest {
     )
     (sink: (TileLayerRDD[K], Int) => Unit): Unit =
   {
-    val (_, rasterMetadata) = LayerMetadata.fromRdd(sourceTiles, layoutScheme)
+    val (_, rasterMetadata) = TileLayerMetadata.fromRdd(sourceTiles, layoutScheme)
     val tiledRdd = sourceTiles.tileToLayout(rasterMetadata, resampleMethod).cache()
     val contextRdd = new ContextRDD(tiledRdd, rasterMetadata)
     val (zoom, rasterRdd) = bufferSize.fold(contextRdd.reproject(destCRS, layoutScheme))(contextRdd.reproject(destCRS, layoutScheme, _))

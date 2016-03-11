@@ -7,7 +7,7 @@ import geotrellis.spark.io.index._
 import geotrellis.spark.testfiles.TestFiles
 
 class FileGridKeySpec
-    extends PersistenceSpec[GridKey, Tile, LayerMetadata[GridKey]]
+    extends PersistenceSpec[GridKey, Tile, TileLayerMetadata[GridKey]]
     with GridKeyIndexMethods
     with TestEnvironment
     with TestFiles
