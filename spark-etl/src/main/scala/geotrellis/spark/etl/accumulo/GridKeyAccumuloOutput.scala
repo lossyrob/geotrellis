@@ -10,5 +10,5 @@ import org.apache.spark.SparkContext
 
 class GridKeyAccumuloOutput extends AccumuloOutput[GridKey, Tile, LayerMetadata[GridKey]] {
   def writer(method: KeyIndexMethod[GridKey], props: Parameters)(implicit sc: SparkContext) =
-    AccumuloLayerWriter(getInstance(props), props("table")).writer[GridKey, Tile, LayerMetadata[GridKey]](method)
+    AccumuloLayerWriter(getInstance(props), props("table"), strategy(props)).writer[GridKey, Tile, LayerMetadata[GridKey]](method)
 }

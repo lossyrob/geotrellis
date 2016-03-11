@@ -10,5 +10,5 @@ import org.apache.spark.SparkContext
 
 class MultibandGridKeyAccumuloOutput extends AccumuloOutput[GridKey, MultibandTile, LayerMetadata[GridKey]] {
   def writer(method: KeyIndexMethod[GridKey], props: Parameters)(implicit sc: SparkContext) =
-    AccumuloLayerWriter(getInstance(props), props("table")).writer[GridKey, MultibandTile, LayerMetadata[GridKey]](method)
+    AccumuloLayerWriter(getInstance(props), props("table"), strategy(props)).writer[GridKey, MultibandTile, LayerMetadata[GridKey]](method)
 }
