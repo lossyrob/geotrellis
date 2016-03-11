@@ -152,7 +152,7 @@ trait KeyIndexFormats {
           "keyBounds"          -> obj.keyBounds.toJson,
           "xResolution"        -> obj.xResolution.toJson,
           "yResolution"        -> obj.yResolution.toJson,
-          "temporalResolution" -> obj.temporalResolution.toJson
+          "timeResolution" -> obj.timeResolution.toJson
         )
       )
 
@@ -163,7 +163,7 @@ trait KeyIndexFormats {
             throw new DeserializationException(s"Wrong KeyIndex type: ${TYPE_NAME} expected.")
 
           properties.convertTo[JsObject]
-            .getFields("keyBounds", "xResolution", "yResolution", "temporalResolution") match {
+            .getFields("keyBounds", "xResolution", "yResolution", "timeResolution") match {
             case Seq(kb, xr, yr, tr) =>
               HilbertGridTimeKeyIndex(
                 kb.convertTo[KeyBounds[GridTimeKey]],
@@ -217,7 +217,7 @@ trait KeyIndexFormats {
         "type"   -> JsString(TYPE_NAME),
         "properties" -> JsObject(
           "keyBounds"          -> obj.keyBounds.toJson,
-          "temporalResolution" -> obj.temporalResolution.toJson
+          "timeResolution" -> obj.timeResolution.toJson
         )
       )
 
@@ -227,9 +227,9 @@ trait KeyIndexFormats {
           if (typeName != TYPE_NAME)
             throw new DeserializationException(s"Wrong KeyIndex type: ${TYPE_NAME} expected.")
 
-          properties.convertTo[JsObject].getFields("keyBounds", "temporalResolution") match {
-            case Seq(keyBounds, temporalResolution) =>
-              ZGridTimeKeyIndex.byMilliseconds(keyBounds.convertTo[KeyBounds[GridTimeKey]], temporalResolution.convertTo[Long])
+          properties.convertTo[JsObject].getFields("keyBounds", "timeResolution") match {
+            case Seq(keyBounds, timeResolution) =>
+              ZGridTimeKeyIndex.byMilliseconds(keyBounds.convertTo[KeyBounds[GridTimeKey]], timeResolution.convertTo[Long])
             case _ =>
               throw new DeserializationException(
                 "Wrong KeyIndex constructor arguments: ZGridTimeKeyIndex constructor arguments expected.")

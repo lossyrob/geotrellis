@@ -47,8 +47,8 @@ object ZGridTimeKeyIndex {
     byMilliseconds(keyBounds, 1000L * 60 * 60 * 365 * years)
 }
 
-class ZGridTimeKeyIndex(val keyBounds: KeyBounds[GridTimeKey], val temporalResolution: Long) extends KeyIndex[GridTimeKey] {
-  private def toZ(key: GridTimeKey): Z3 = Z3(key.col, key.row, (key.instant / temporalResolution).toInt)
+class ZGridTimeKeyIndex(val keyBounds: KeyBounds[GridTimeKey], val timeResolution: Long) extends KeyIndex[GridTimeKey] {
+  private def toZ(key: GridTimeKey): Z3 = Z3(key.col, key.row, (key.instant / timeResolution).toInt)
 
   def toIndex(key: GridTimeKey): Long = toZ(key).z
 

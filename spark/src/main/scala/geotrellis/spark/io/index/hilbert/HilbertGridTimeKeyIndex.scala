@@ -21,25 +21,25 @@ import scala.collection.JavaConversions._
 import spire.syntax.cfor._
 
 object HilbertGridTimeKeyIndex {
-  def apply(minKey: GridTimeKey, maxKey: GridTimeKey, spatialResolution: Int, temporalResolution: Int): HilbertGridTimeKeyIndex =
-    apply(KeyBounds(minKey, maxKey), spatialResolution, temporalResolution)
+  def apply(minKey: GridTimeKey, maxKey: GridTimeKey, spatialResolution: Int, timeResolution: Int): HilbertGridTimeKeyIndex =
+    apply(KeyBounds(minKey, maxKey), spatialResolution, timeResolution)
 
-  def apply(keyBounds: KeyBounds[GridTimeKey], spatialResolution: Int, temporalResolution: Int): HilbertGridTimeKeyIndex =
-    apply(keyBounds, spatialResolution, spatialResolution, temporalResolution)
+  def apply(keyBounds: KeyBounds[GridTimeKey], spatialResolution: Int, timeResolution: Int): HilbertGridTimeKeyIndex =
+    apply(keyBounds, spatialResolution, spatialResolution, timeResolution)
 
-  def apply(keyBounds: KeyBounds[GridTimeKey], xResolution: Int, yResolution: Int, temporalResolution: Int): HilbertGridTimeKeyIndex =
-    new HilbertGridTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution)
+  def apply(keyBounds: KeyBounds[GridTimeKey], xResolution: Int, yResolution: Int, timeResolution: Int): HilbertGridTimeKeyIndex =
+    new HilbertGridTimeKeyIndex(keyBounds, xResolution, yResolution, timeResolution)
 }
 
 class HilbertGridTimeKeyIndex(
   val keyBounds: KeyBounds[GridTimeKey],
   val xResolution: Int,
   val yResolution: Int,
-  val temporalResolution: Int
+  val timeResolution: Int
 ) extends KeyIndex[GridTimeKey] {
-  val startMillis = keyBounds.minKey.temporalKey.time.getMillis
-  val timeWidth = keyBounds.maxKey.temporalKey.time.getMillis - startMillis
-  val temporalBinCount = math.pow(2, temporalResolution)
+  val startMillis = keyBounds.minKey.timeKey.time.getMillis
+  val timeWidth = keyBounds.maxKey.timeKey.time.getMillis - startMillis
+  val timeBinCount = math.pow(2, timeResolution)
   val minKey = keyBounds.minKey.spatialKey
 
   @transient lazy val chc = {
@@ -48,7 +48,7 @@ class HilbertGridTimeKeyIndex(
         List(
           xResolution,
           yResolution,
-          temporalResolution
+          timeResolution
         ).map(new java.lang.Integer(_))
       )
 
@@ -57,8 +57,8 @@ class HilbertGridTimeKeyIndex(
 
   def binTime(key: GridTimeKey): Long = {
     // index requires right bound to be exclusive but KeyBounds do not, fake that.
-    val bin = (((key.temporalKey.time.getMillis - startMillis) * temporalBinCount) / timeWidth)
-    (if (bin == temporalBinCount) bin - 1  else bin).toLong
+    val bin = (((key.timeKey.time.getMillis - startMillis) * timeBinCount) / timeWidth)
+    (if (bin == timeBinCount) bin - 1  else bin).toLong
   }
 
   def toIndex(key: GridTimeKey): Long = {
@@ -66,7 +66,7 @@ class HilbertGridTimeKeyIndex(
       Array(
         BitVectorFactories.OPTIMAL.apply(xResolution),
         BitVectorFactories.OPTIMAL.apply(yResolution),
-        BitVectorFactories.OPTIMAL.apply(temporalResolution)
+        BitVectorFactories.OPTIMAL.apply(timeResolution)
       )
 
     val col = key.spatialKey.col - minKey.col

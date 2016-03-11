@@ -5,8 +5,8 @@ import geotrellis.spark.etl.TypedModule
 trait HadoopModule extends TypedModule {
   register(new GeoTiffHadoopInput)
   register(new GridKeyHadoopOutput)
-  register(new TemporalGeoTiffHadoopInput)
-  register(new TemporalMultibandGeoTiffHadoopInput)
+  register(new TimeGeoTiffHadoopInput)
+  register(new TimeMultibandGeoTiffHadoopInput)
   register(new GridTimeKeyHadoopOutput)
   register(new GridKeyRenderOutput)
   register(new GeoTiffSequenceHadoopInput)

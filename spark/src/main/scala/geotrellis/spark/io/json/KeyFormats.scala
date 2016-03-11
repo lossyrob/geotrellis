@@ -42,18 +42,18 @@ trait KeyFormats {
   }
 
 
-  implicit object TemporalKeyFormat extends RootJsonFormat[TemporalKey] {
-    def write(key: TemporalKey) =
+  implicit object TimeKeyFormat extends RootJsonFormat[TimeKey] {
+    def write(key: TimeKey) =
       JsObject(
         "instant" -> JsNumber(key.instant)
       )
 
-    def read(value: JsValue): TemporalKey =
+    def read(value: JsValue): TimeKey =
       value.asJsObject.getFields("instant") match {
         case Seq(JsNumber(time)) =>
-          TemporalKey(time.toLong)
+          TimeKey(time.toLong)
         case _ =>
-          throw new DeserializationException("TemporalKey expected")
+          throw new DeserializationException("TimeKey expected")
       }
   }
 

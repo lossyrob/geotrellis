@@ -1,4 +1,4 @@
-package geotrellis.spark.mapalgebra.local.temporal
+package geotrellis.spark.mapalgebra.local.time
 
 import geotrellis.raster._
 import geotrellis.spark._
@@ -8,7 +8,7 @@ import org.joda.time.{DateTimeZone, DateTime}
 import reflect.ClassTag
 
 
-object TemporalWindowHelper {
+object TimeWindowHelper {
 
   val UnitSeconds = 1
   val UnitMinutes = 2
@@ -23,7 +23,7 @@ object TemporalWindowHelper {
   val Maximum = 3
   val Variance = 4
 
-  def badState = throw new IllegalStateException("Bad temporal window method state.")
+  def badState = throw new IllegalStateException("Bad time window method state.")
 
   def parseUnit(s: String) = s.toLowerCase match {
     case "seconds" => UnitSeconds
@@ -38,7 +38,7 @@ object TemporalWindowHelper {
 
 }
 
-case class TemporalWindowState[K](
+case class TimeWindowState[K](
   rdd: RDD[(K, Tile)],
   method: Int,
   windowSize: Option[Int] = None,
@@ -48,33 +48,33 @@ case class TemporalWindowState[K](
 )(
   implicit val keyClassTag: ClassTag[K],
     _sc: GridComponent[K],
-    _tc: TemporalComponent[K]) {
+    _tc: TimeComponent[K]) {
 
-  import TemporalWindowHelper._
+  import TimeWindowHelper._
 
   private lazy val state =
     if (windowSize.isEmpty && unit.isEmpty) 0
     else if (start.isEmpty) 1
     else 2
 
-  def per(p: Int)(unitString: String): TemporalWindowState[K] =
+  def per(p: Int)(unitString: String): TimeWindowState[K] =
     if (state != 0) badState
     else {
       val u = parseUnit(unitString)
       copy(windowSize = Some(p), unit = Some(u))
     }
 
-  def from(s: DateTime): TemporalWindowState[K] =
+  def from(s: DateTime): TimeWindowState[K] =
     if (state != 1) badState
     else copy(start = Some(s))
 
   def to(to: DateTime) =
     if (state != 2) badState
     else method match {
-      case Average => rdd.temporalMean(windowSize.get, unit.get, start.get, to, partitioner)
-      case Minimum => rdd.temporalMin(windowSize.get, unit.get, start.get, to, partitioner)
-      case Maximum => rdd.temporalMax(windowSize.get, unit.get, start.get, to, partitioner)
-      case Variance => rdd.temporalVariance(windowSize.get, unit.get, start.get, to, partitioner)
+      case Average => rdd.timeMean(windowSize.get, unit.get, start.get, to, partitioner)
+      case Minimum => rdd.timeMin(windowSize.get, unit.get, start.get, to, partitioner)
+      case Maximum => rdd.timeMax(windowSize.get, unit.get, start.get, to, partitioner)
+      case Variance => rdd.timeVariance(windowSize.get, unit.get, start.get, to, partitioner)
       case _ => throw new IllegalStateException("Bad method $method.")
     }
 

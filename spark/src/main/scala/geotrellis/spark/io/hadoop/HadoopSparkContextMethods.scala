@@ -1,7 +1,7 @@
 package geotrellis.spark.io.hadoop
 
 import geotrellis.raster._
-import geotrellis.spark.TemporalProjectedExtent
+import geotrellis.spark.TimeProjectedExtent
 import geotrellis.vector._
 import geotrellis.spark.io.hadoop.formats._
 
@@ -38,26 +38,26 @@ trait HadoopSparkContextMethods {
       classOf[Tile]
     )
 
-  def hadoopTemporalGeoTiffRDD(path: String): RDD[(TemporalProjectedExtent, Tile)] =
-    hadoopTemporalGeoTiffRDD(new Path(path), defaultTiffExtensions)
+  def hadoopTimeGeoTiffRDD(path: String): RDD[(TimeProjectedExtent, Tile)] =
+    hadoopTimeGeoTiffRDD(new Path(path), defaultTiffExtensions)
 
-  def hadoopTemporalGeoTiffRDD(path: String, tiffExtension: String): RDD[(TemporalProjectedExtent, Tile)] =
-    hadoopTemporalGeoTiffRDD(new Path(path), Seq(tiffExtension))
+  def hadoopTimeGeoTiffRDD(path: String, tiffExtension: String): RDD[(TimeProjectedExtent, Tile)] =
+    hadoopTimeGeoTiffRDD(new Path(path), Seq(tiffExtension))
 
-  def hadoopTemporalGeoTiffRDD(path: String, tiffExtensions: Seq[String] ): RDD[(TemporalProjectedExtent, Tile)] =
-    hadoopTemporalGeoTiffRDD(new Path(path), tiffExtensions)
+  def hadoopTimeGeoTiffRDD(path: String, tiffExtensions: Seq[String] ): RDD[(TimeProjectedExtent, Tile)] =
+    hadoopTimeGeoTiffRDD(new Path(path), tiffExtensions)
 
-  def hadoopTemporalGeoTiffRDD(path: Path): RDD[(TemporalProjectedExtent, Tile)] =
-    hadoopTemporalGeoTiffRDD(path, defaultTiffExtensions)
+  def hadoopTimeGeoTiffRDD(path: Path): RDD[(TimeProjectedExtent, Tile)] =
+    hadoopTimeGeoTiffRDD(path, defaultTiffExtensions)
 
-  def hadoopTemporalGeoTiffRDD(path: Path, tiffExtension: String): RDD[(TemporalProjectedExtent, Tile)] =
-    hadoopTemporalGeoTiffRDD(path, Seq(tiffExtension))
+  def hadoopTimeGeoTiffRDD(path: Path, tiffExtension: String): RDD[(TimeProjectedExtent, Tile)] =
+    hadoopTimeGeoTiffRDD(path, Seq(tiffExtension))
 
-  def hadoopTemporalGeoTiffRDD(path: Path, tiffExtensions: Seq[String]): RDD[(TemporalProjectedExtent, Tile)] =
+  def hadoopTimeGeoTiffRDD(path: Path, tiffExtensions: Seq[String]): RDD[(TimeProjectedExtent, Tile)] =
     sc.newAPIHadoopRDD(
       sc.hadoopConfiguration.withInputDirectory(path, tiffExtensions),
-      classOf[TemporalGeoTiffInputFormat],
-      classOf[TemporalProjectedExtent],
+      classOf[TimeGeoTiffInputFormat],
+      classOf[TimeProjectedExtent],
       classOf[Tile]
     )
 
@@ -78,20 +78,20 @@ trait HadoopSparkContextMethods {
       classOf[MultibandTile]
     )
 
-  def hadoopTemporalMultibandGeoTiffRDD(path: String): RDD[(TemporalProjectedExtent, MultibandTile)] =
-    hadoopTemporalMultibandGeoTiffRDD(new Path(path), defaultTiffExtensions)
+  def hadoopTimeMultibandGeoTiffRDD(path: String): RDD[(TimeProjectedExtent, MultibandTile)] =
+    hadoopTimeMultibandGeoTiffRDD(new Path(path), defaultTiffExtensions)
 
-  def hadoopTemporalMultibandGeoTiffRDD(path: String, tiffExtension: String): RDD[(TemporalProjectedExtent, MultibandTile)] =
-    hadoopTemporalMultibandGeoTiffRDD(new Path(path), Seq(tiffExtension))
+  def hadoopTimeMultibandGeoTiffRDD(path: String, tiffExtension: String): RDD[(TimeProjectedExtent, MultibandTile)] =
+    hadoopTimeMultibandGeoTiffRDD(new Path(path), Seq(tiffExtension))
 
-  def hadoopTemporalMultibandGeoTiffRDD(path: String, tiffExtensions: Seq[String]): RDD[(TemporalProjectedExtent, MultibandTile)] =
-    hadoopTemporalMultibandGeoTiffRDD(new Path(path), tiffExtensions)
+  def hadoopTimeMultibandGeoTiffRDD(path: String, tiffExtensions: Seq[String]): RDD[(TimeProjectedExtent, MultibandTile)] =
+    hadoopTimeMultibandGeoTiffRDD(new Path(path), tiffExtensions)
 
-  def hadoopTemporalMultibandGeoTiffRDD(path: Path, tiffExtensions: Seq[String] = defaultTiffExtensions): RDD[(TemporalProjectedExtent, MultibandTile)] =
+  def hadoopTimeMultibandGeoTiffRDD(path: Path, tiffExtensions: Seq[String] = defaultTiffExtensions): RDD[(TimeProjectedExtent, MultibandTile)] =
     sc.newAPIHadoopRDD(
       sc.hadoopConfiguration.withInputDirectory(path, tiffExtensions),
-      classOf[TemporalMultibandGeoTiffInputFormat],
-      classOf[TemporalProjectedExtent],
+      classOf[TimeMultibandGeoTiffInputFormat],
+      classOf[TimeProjectedExtent],
       classOf[MultibandTile]
     )
 

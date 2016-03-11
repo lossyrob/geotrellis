@@ -18,16 +18,16 @@ object HilbertKeyIndexMethod extends HilbertKeyIndexMethod {
       }
     }
 
-  def apply(temporalResolution: Int): KeyIndexMethod[GridTimeKey] =
+  def apply(timeResolution: Int): KeyIndexMethod[GridTimeKey] =
     new KeyIndexMethod[GridTimeKey] {
       def createIndex(keyBounds: KeyBounds[GridTimeKey]) = {
         val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
         val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
-        HilbertGridTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution)
+        HilbertGridTimeKeyIndex(keyBounds, xResolution, yResolution, timeResolution)
       }
     }
 
-  def apply(minDate: DateTime, maxDate: DateTime, temporalResolution: Int): KeyIndexMethod[GridTimeKey] =
+  def apply(minDate: DateTime, maxDate: DateTime, timeResolution: Int): KeyIndexMethod[GridTimeKey] =
     new KeyIndexMethod[GridTimeKey] {
       def createIndex(keyBounds: KeyBounds[GridTimeKey]): KeyIndex[GridTimeKey] = {
         val adjustedKeyBounds = {
@@ -37,7 +37,7 @@ object HilbertKeyIndexMethod extends HilbertKeyIndexMethod {
         }
         val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
         val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
-        HilbertGridTimeKeyIndex(adjustedKeyBounds, xResolution, yResolution, temporalResolution)
+        HilbertGridTimeKeyIndex(adjustedKeyBounds, xResolution, yResolution, timeResolution)
       }
     }
 }

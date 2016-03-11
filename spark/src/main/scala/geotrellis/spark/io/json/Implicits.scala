@@ -1,9 +1,7 @@
 package geotrellis.spark.io.json
 
 import geotrellis.spark._
-import geotrellis.spark.io.index
 import geotrellis.spark.tiling.LayoutDefinition
-import geotrellis.spark.util._
 import geotrellis.proj4.CRS
 import geotrellis.raster._
 import geotrellis.raster.io.json._
@@ -13,8 +11,6 @@ import geotrellis.vector.io.json._
 import com.github.nscala_time.time.Imports._
 import org.apache.avro.Schema
 import spray.json._
-
-import scala.reflect.ClassTag
 
 object Implicits extends Implicits
 

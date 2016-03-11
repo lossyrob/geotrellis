@@ -7,13 +7,13 @@ import com.github.nscala_time.time.Imports._
 
 case class GridTimeKey(col: Int, row: Int, instant: Long) {
   def spatialKey: GridKey = GridKey(col, row)
-  def temporalKey: TemporalKey = TemporalKey(time)
+  def timeKey: TimeKey = TimeKey(time)
   def time: DateTime = new DateTime(instant, DateTimeZone.UTC)
 }
 
 object GridTimeKey {
-  def apply(spatialKey: GridKey, temporalKey: TemporalKey): GridTimeKey =
-    GridTimeKey(spatialKey.col, spatialKey.row, temporalKey.time)
+  def apply(spatialKey: GridKey, timeKey: TimeKey): GridTimeKey =
+    GridTimeKey(spatialKey.col, spatialKey.row, timeKey.time)
 
   def apply(col: Int, row: Int, dateTime: DateTime): GridTimeKey =
     GridTimeKey(col, row, dateTime.getMillis)
@@ -21,11 +21,11 @@ object GridTimeKey {
   implicit val spatialComponent =
     Component[GridTimeKey, GridKey](k => k.spatialKey, (k, sk) => GridTimeKey(sk.col, sk.row, k.time))
 
-  implicit val temporalComponent =
-    Component[GridTimeKey, TemporalKey](k => k.temporalKey, (k, tk) => GridTimeKey(k.col, k.row, tk.instant))
+  implicit val timeComponent =
+    Component[GridTimeKey, TimeKey](k => k.timeKey, (k, tk) => GridTimeKey(k.col, k.row, tk.instant))
 
   implicit def ordering: Ordering[GridTimeKey] =
-    Ordering.by(stk => (stk.spatialKey, stk.temporalKey))
+    Ordering.by(stk => (stk.spatialKey, stk.timeKey))
 
   implicit object Boundable extends Boundable[GridTimeKey] {
     def minBound(a: GridTimeKey, b: GridTimeKey) = {

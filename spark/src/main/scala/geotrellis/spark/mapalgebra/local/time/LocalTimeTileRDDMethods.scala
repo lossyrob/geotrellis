@@ -1,4 +1,4 @@
-package geotrellis.spark.mapalgebra.local.temporal
+package geotrellis.spark.mapalgebra.local.time
 
 import geotrellis.raster._
 import geotrellis.raster.mapalgebra.local._
@@ -16,47 +16,47 @@ import org.apache.spark.SparkContext._
 import annotation.tailrec
 
 // TODO: break out stuff to companion object.
-trait LocalTemporalTileRDDMethods[K] extends TileRDDMethods[K] {
+trait LocalTimeTileRDDMethods[K] extends TileRDDMethods[K] {
 
-  import TemporalWindowHelper._
+  import TimeWindowHelper._
 
   implicit val _sc: GridComponent[K]
 
-  implicit val _tc: TemporalComponent[K]
+  implicit val _tc: TimeComponent[K]
 
-  def temporalMin(
+  def timeMin(
     windowSize: Int,
     unit: Int,
     start: DateTime,
     end: DateTime,
     partitioner: Option[Partitioner] = None): RDD[(K, Tile)] =
-    aggregateWithTemporalWindow(windowSize, unit, start, end, partitioner)(minReduceOp)
+    aggregateWithTimeWindow(windowSize, unit, start, end, partitioner)(minReduceOp)
 
-  def temporalMax(
+  def timeMax(
     windowSize: Int,
     unit: Int,
     start: DateTime,
     end: DateTime,
     partitioner: Option[Partitioner] = None): RDD[(K, Tile)] =
-    aggregateWithTemporalWindow(windowSize, unit, start, end, partitioner)(maxReduceOp)
+    aggregateWithTimeWindow(windowSize, unit, start, end, partitioner)(maxReduceOp)
 
-  def temporalMean(
+  def timeMean(
     windowSize: Int,
     unit: Int,
     start: DateTime,
     end: DateTime,
     partitioner: Option[Partitioner] = None): RDD[(K, Tile)] =
-    aggregateWithTemporalWindow(windowSize, unit, start, end, partitioner)(meanReduceOp)
+    aggregateWithTimeWindow(windowSize, unit, start, end, partitioner)(meanReduceOp)
 
-  def temporalVariance(
+  def timeVariance(
     windowSize: Int,
     unit: Int,
     start: DateTime,
     end: DateTime,
     partitioner: Option[Partitioner] = None): RDD[(K, Tile)] =
-    aggregateWithTemporalWindow(windowSize, unit, start, end, partitioner)(varianceReduceOp)
+    aggregateWithTimeWindow(windowSize, unit, start, end, partitioner)(varianceReduceOp)
 
-  private def aggregateWithTemporalWindow(
+  private def aggregateWithTimeWindow(
     windowSize: Int,
     unit: Int,
     start: DateTime,
@@ -68,7 +68,7 @@ trait LocalTemporalTileRDDMethods[K] extends TileRDDMethods[K] {
       self
         .map { case (key, tile) =>
           val GridKey(col, row) = key.getComponent[GridKey]
-          val time = key.getComponent[TemporalKey].time
+          val time = key.getComponent[TimeKey].time
           val startDiff = getDifferenceByUnit(unit, start, time)
           val endDiff = getDifferenceByUnit(unit, time, end)
 
@@ -90,7 +90,7 @@ trait LocalTemporalTileRDDMethods[K] extends TileRDDMethods[K] {
       .map { case (_, iter) =>
         val (keys, tiles) = iter.unzip
 
-        val key = keys.min(Ordering.by { key: K => key.getComponent[TemporalKey].time })
+        val key = keys.min(Ordering.by { key: K => key.getComponent[TimeKey].time })
         val tile = reduceOp(tiles)
 
         (key, tile)

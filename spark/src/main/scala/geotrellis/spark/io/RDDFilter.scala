@@ -167,12 +167,12 @@ object At {
   def apply[T](at: T) = RDDFilter.Value[At.type, T](at)
 
   /** Define At filter for a DateTime */
-  implicit def forDateTime[K: TemporalComponent : Boundable, M] =
+  implicit def forDateTime[K: TimeComponent : Boundable, M] =
     new RDDFilter[K, At.type, DateTime, M] {
       def apply(metadata: M, kb: KeyBounds[K], at: DateTime) = {
         val queryBounds = KeyBounds(
-          kb.minKey setComponent TemporalKey(at),
-          kb.maxKey setComponent TemporalKey(at))
+          kb.minKey setComponent TimeKey(at),
+          kb.maxKey setComponent TimeKey(at))
         (queryBounds intersect kb) match {
           case kb: KeyBounds[K] => List(kb)
           case EmptyBounds => Nil
@@ -185,12 +185,12 @@ object Between {
   def apply[T](start: T, end: T) = RDDFilter.Value[Between.type, (T, T)](start -> end)
 
   /** Define Between filter for a tuple of DateTimes */
-  implicit def forDateTimeTuple[K: TemporalComponent : Boundable, M] =
+  implicit def forDateTimeTuple[K: TimeComponent : Boundable, M] =
     new RDDFilter[K, Between.type, (DateTime, DateTime), M] {
       def apply(metadata: M, kb: KeyBounds[K], range: (DateTime, DateTime)) = {
         val queryBounds = KeyBounds(
-          kb.minKey setComponent TemporalKey(range._1),
-          kb.maxKey setComponent TemporalKey(range._2))
+          kb.minKey setComponent TimeKey(range._1),
+          kb.maxKey setComponent TimeKey(range._2))
         (queryBounds intersect kb) match {
           case kb: KeyBounds[K] => List(kb)
           case EmptyBounds => Nil

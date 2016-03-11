@@ -1,7 +1,7 @@
 package geotrellis.spark.etl
 
 import geotrellis.raster.{MultibandTile, Tile}
-import geotrellis.spark.{TemporalProjectedExtent, GridTimeKey, GridKey}
+import geotrellis.spark.{TimeProjectedExtent, GridTimeKey, GridKey}
 import geotrellis.spark.ingest._
 import geotrellis.vector.ProjectedExtent
 import org.scalatest._

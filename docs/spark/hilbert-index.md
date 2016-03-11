@@ -25,10 +25,10 @@ then the index-order of the points will be different.
 
 ### 62-bit Limit ###
 
-Currently, the spatial and temporal resolution required to index the points,
+Currently, the spatial and time resolution required to index the points,
 expressed in bits, must sum to 62 bits or fewer.
 
-For example, the following code appears in `HilbertSpacetimeKeyIndex.scala`:
+For example, the following code appears in `HilbertGridTimeKeyIndex.scala`:
 
 ```scala
 @transient lazy val chc = {
@@ -37,12 +37,12 @@ For example, the following code appears in `HilbertSpacetimeKeyIndex.scala`:
       List(
         xResolution,
         yResolution,
-        temporalResolution
+        timeResolution
       ).map(new java.lang.Integer(_))
     )
 ```
 
-where `xResolution`, `yResolution` and `temporalResolution` are
+where `xResolution`, `yResolution` and `timeResolution` are
 numbers of bits required to express possible locations in each of
 those dimensions.  If those three integers sum to more than 62 bits,
 an error will be thrown at runtime.

@@ -64,11 +64,11 @@ class PyramidSpec extends FunSpec with Matchers with TestEnvironment {
       levelOneRDD.metadata.layout.tileLayout should be (TileLayout(2, 2, 2, 2))
       val results: Array[(GridTimeKey, Tile)] = levelOneRDD.collect()
 
-      results.map(_._1.temporalKey.instant).distinct.sorted.toSeq should be (Seq(dt1.getMillis, dt2.getMillis))
+      results.map(_._1.timeKey.instant).distinct.sorted.toSeq should be (Seq(dt1.getMillis, dt2.getMillis))
 
       for((key, tile) <- results) {
         val multi =
-          if(key.temporalKey.instant == dt1.getMillis) 1
+          if(key.timeKey.instant == dt1.getMillis) 1
           else 10
         key.spatialKey match {
           case GridKey(0, 0) =>

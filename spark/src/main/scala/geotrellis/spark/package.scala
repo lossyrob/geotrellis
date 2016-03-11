@@ -46,7 +46,7 @@ package object spark
     with stitch.Implicits
     with mapalgebra.Implicits
     with mapalgebra.local.Implicits
-    with mapalgebra.local.temporal.Implicits
+    with mapalgebra.local.time.Implicits
     with mapalgebra.focal.Implicits
     with mapalgebra.zonal.Implicits
     with summary.polygonal.Implicits
@@ -93,7 +93,7 @@ package object spark
   }
 
   type GridComponent[K] = Component[K, GridKey]
-  type TemporalComponent[K] = Component[K, TemporalKey]
+  type TimeComponent[K] = Component[K, TimeKey]
 
   type TileBounds = GridBounds
 
@@ -135,9 +135,9 @@ package object spark
       }, preservesPartitioning = true)
   }
 
-  implicit class withProjectedExtentTemporalTilerKeyMethods[K: Component[?, ProjectedExtent]: Component[?, TemporalKey]](val self: K) extends TilerKeyMethods[K, GridTimeKey] {
+  implicit class withProjectedExtentTimeTilerKeyMethods[K: Component[?, ProjectedExtent]: Component[?, TimeKey]](val self: K) extends TilerKeyMethods[K, GridTimeKey] {
     def extent = self.getComponent[ProjectedExtent].extent
-    def translate(spatialKey: GridKey): GridTimeKey = GridTimeKey(spatialKey, self.getComponent[TemporalKey])
+    def translate(spatialKey: GridKey): GridTimeKey = GridTimeKey(spatialKey, self.getComponent[TimeKey])
   }
 
   implicit class withProjectedExtentTilerKeyMethods[K: Component[?, ProjectedExtent]](val self: K) extends TilerKeyMethods[K, GridKey] {

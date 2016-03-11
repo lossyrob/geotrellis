@@ -1,4 +1,4 @@
-package geotrellis.spark.mapalgebra.local.temporal
+package geotrellis.spark.mapalgebra.local.time
 
 import geotrellis.raster._
 import geotrellis.raster.mapalgebra.local._
@@ -11,11 +11,11 @@ import spire.syntax.cfor._
 
 import org.scalatest.FunSpec
 
-class LocalTemporalSpec extends FunSpec with TestEnvironment {
+class LocalTimeSpec extends FunSpec with TestEnvironment {
 
-  describe("Local Temporal Operations") {
+  describe("Local Time Operations") {
 
-    def createIncreasingTemporalTileLayerRDD(dates: Seq[DateTime], f: DateTime => Int = { dt => dt.getYear }) = {
+    def createIncreasingTimeTileLayerRDD(dates: Seq[DateTime], f: DateTime => Int = { dt => dt.getYear }) = {
       val tileLayout = TileLayout(3, 3, 3, 3)
 
       val datesZippedWithIndex = dates.zipWithIndex
@@ -30,11 +30,11 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
 
         val kb = rasterRDD.metadata.bounds.get
         val metadata = rasterRDD.metadata.copy(bounds =
-          KeyBounds(GridTimeKey(kb.minKey, TemporalKey(dates.min)),
-            GridTimeKey(kb.maxKey, TemporalKey(dates.max)))
+          KeyBounds(GridTimeKey(kb.minKey, TimeKey(dates.min)),
+            GridTimeKey(kb.maxKey, TimeKey(dates.max)))
         )
         val rdd = rasterRDD.map { case (spatialKey, tile) =>
-          (GridTimeKey(spatialKey, TemporalKey(dateTime)), tile)
+          (GridTimeKey(spatialKey, TimeKey(dateTime)), tile)
         }
 
         new ContextRDD(rdd, metadata)
@@ -46,7 +46,7 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
       new ContextRDD(combinedRDDs, metadata)
     }
 
-    def groupTileLayerRDDToRastersByTemporalKey(rasterRDD: TileLayerRDD[GridTimeKey]): Map[DateTime, Tile] = {
+    def groupTileLayerRDDToRastersByTimeKey(rasterRDD: TileLayerRDD[GridTimeKey]): Map[DateTime, Tile] = {
       val metadata = rasterRDD.metadata
       val gridBounds = metadata.mapTransform(metadata.extent)
       val tileLayout =
@@ -75,13 +75,13 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
 
     it("should work with min for a 9 year period where the window is 3 years.") {
       val dates = (1 until 10).map(i => new DateTime(i, 1, 1, 0, 0, 0, DateTimeZone.UTC))
-      val rasterRDD: TileLayerRDD[GridTimeKey] = createIncreasingTemporalTileLayerRDD(dates)
+      val rasterRDD: TileLayerRDD[GridTimeKey] = createIncreasingTimeTileLayerRDD(dates)
 
       val start = new DateTime(1, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val end = new DateTime(9, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val res = rasterRDD.withContext(_.minimum.per(3)("years") from (start) to (end))
 
-      val rasters = groupTileLayerRDDToRastersByTemporalKey(res)
+      val rasters = groupTileLayerRDDToRastersByTimeKey(res)
 
       rasters.size should be(3)
 
@@ -96,14 +96,14 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
 
     it("should work with max for a 12 month period where the window is 5 months.") {
       val dates = (1 to 12).map(i => new DateTime(1, i, 1, 0, 0, 0, DateTimeZone.UTC))
-      val rasterRDD = createIncreasingTemporalTileLayerRDD(dates, { date => date.getMonthOfYear })
+      val rasterRDD = createIncreasingTimeTileLayerRDD(dates, { date => date.getMonthOfYear })
 
       val start = new DateTime(1, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val end = new DateTime(2, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val periodStep = 5
       val res = rasterRDD.withContext(_.maximum.per(periodStep)("months") from (start) to (end))
 
-      val rasters = groupTileLayerRDDToRastersByTemporalKey(res)
+      val rasters = groupTileLayerRDDToRastersByTimeKey(res)
 
       rasters.size should be(3)
 
@@ -118,14 +118,14 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
 
     it("should work with mean for a 25 days period where the window is 7 days.") {
       val dates = (1 to 25).map(i => new DateTime(1, 1, i, 0, 0, 0, DateTimeZone.UTC))
-      val rasterRDD = createIncreasingTemporalTileLayerRDD(dates, { date => date.getDayOfMonth })
+      val rasterRDD = createIncreasingTimeTileLayerRDD(dates, { date => date.getDayOfMonth })
 
       val start = new DateTime(1, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val end = new DateTime(2, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val windowSize = 7
       val res = rasterRDD.withContext(_.average.per(windowSize)("days") from (start) to (end))
 
-      val rasters = groupTileLayerRDDToRastersByTemporalKey(res)
+      val rasters = groupTileLayerRDDToRastersByTimeKey(res)
 
       rasters.size should be(4)
 
@@ -137,18 +137,18 @@ class LocalTemporalSpec extends FunSpec with TestEnvironment {
 
     it("should work with variance for a 12 hours period where the window is 3 hours.") {
       val dates = (0 to 11).map(i => new DateTime(1, 1, 1, i, 0, 0, DateTimeZone.UTC))
-      val rasterRDD = createIncreasingTemporalTileLayerRDD(dates, { date => date.getHourOfDay })
+      val rasterRDD = createIncreasingTimeTileLayerRDD(dates, { date => date.getHourOfDay })
 
       val start = new DateTime(1, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val end = new DateTime(2, 1, 1, 0, 0, 0, DateTimeZone.UTC)
       val windowSize = 3
       val res = rasterRDD.withContext(_.variance.per(windowSize)("hours") from (start) to (end))
 
-      val rasters = groupTileLayerRDDToRastersByTemporalKey(res)
+      val rasters = groupTileLayerRDDToRastersByTimeKey(res)
 
       rasters.size should be(4)
 
-      val inputRasters = groupTileLayerRDDToRastersByTemporalKey(rasterRDD).values.toList
+      val inputRasters = groupTileLayerRDDToRastersByTimeKey(rasterRDD).values.toList
       val expectedTiles =
         for (indicies <- (0 to 11).grouped(3)) yield {
           Variance(indicies.map {

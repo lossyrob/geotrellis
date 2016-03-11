@@ -25,7 +25,7 @@ class TestRegistrator extends NormalKryoRegistrator {
       kryo.register(classOf[geotrellis.spark.io.avro.codecs.TileCodecs$$anon$8])
       kryo.register(classOf[geotrellis.spark.GridTimeKey$$anonfun$ordering$1])
       kryo.register(classOf[geotrellis.spark.GridKey$$anonfun$ordering$1])
-      kryo.register(classOf[geotrellis.spark.TemporalKey$$anonfun$ordering$1])
+      kryo.register(classOf[geotrellis.spark.TimeKey$$anonfun$ordering$1])
       kryo.register(classOf[geotrellis.spark.util.OptimusPrime])
       kryo.register(classOf[scala.math.Ordering$$anon$11])
       kryo.register(classOf[scala.math.Ordering$$anon$9])
