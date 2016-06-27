@@ -82,7 +82,7 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
     }
 
     def getSegment(i: Int) = {
-      val reader = new CompressedBytesByteBufferReader(i)
+      val reader = new BufferSegmentBytesReader(i)
       reader.head
     }
 
@@ -106,7 +106,7 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
       override def head = segment
 
       override def tail =
-        new CompressedBytesByteBufferReader(nextSegment)
+        new BufferSegmentBytesReader(nextSegment)
 
       override def isEmpty = position == byteBuffer.capacity
 

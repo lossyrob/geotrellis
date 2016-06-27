@@ -23,7 +23,7 @@ object ArraySegmentBytes {
    *  Array[Array[Byte]]
    */
   def apply(byteBuffer: ByteBuffer, storageMethod: StorageMethod,
-    tiffTags: TiffTags): CompressedBytesArray = {
+    tiffTags: TiffTags): ArraySegmentBytes = {
       val compressedBytes: Array[Array[Byte]] = {
         def readSections(offsets: Array[Int],
           byteCounts: Array[Int]): Array[Array[Byte]] = {
@@ -66,6 +66,6 @@ object ArraySegmentBytes {
               readSections(tileOffsets.get, tileByteCounts.get)
           }
       }
-      new CompressedBytesArray(compressedBytes)
+      new ArraySegmentBytes(compressedBytes)
     }
 }
