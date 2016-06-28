@@ -1,5 +1,6 @@
 package geotrellis.raster.io.geotiff
 
+import geotrellis.util._
 import geotrellis.raster._
 import geotrellis.raster.io.geotiff.reader._
 import geotrellis.raster.testkit._
@@ -42,7 +43,7 @@ class ArraySegmentBytesSpec extends FunSpec
       }
 
       it("should produce the same Byte when it is called using a Multiband") {
-        val geotiff = SinglebandGeoTiff.compressed(geoTiffPath("3bands/3bands-tiled-deflate.tif"))
+        val geotiff = MultibandGeoTiff.compressed(geoTiffPath("3bands/3bands-tiled-deflate.tif"))
         val arraySegmentBytes = new ArraySegmentBytes(geotiff.imageData.compressedBytes)
         val expectedArray = arraySegmentBytes.getSegment(0)
         val actualArray = geotiff.imageData.compressedBytes(0)
@@ -53,14 +54,34 @@ class ArraySegmentBytesSpec extends FunSpec
         assert(expected == actual)
       }
 
-      it("should produce the same segment when it is crated from a ByteBuffer using a Singleband") {
-        val geotiff = SinglebandGeoTiff.compressed(geoTiffPath("3bands/3bands-tiled-deflate.tif"))
-        val arraySegmentBytes = new ArraySegmentBytes(geotiff.imageData.compressedBytes)
-        val expectedArray = arraySegmentBytes.getSegment(0)
+      it("should produce the same Byte when it is crated from a ByteBuffer using a Singleband") {
+        val geotiff = SinglebandGeoTiff.compressed(geoTiffPath("wm_depth.tif"))
         val actualArray = geotiff.imageData.compressedBytes(0)
-
-        val expected = expectedArray(0)
         val actual = actualArray(0)
+
+        val tiffTags = TiffTagsReader.read(geoTiffPath("wm_depth.tif"))
+        val storage = geotiff.imageData.segmentLayout.storageMethod
+
+        val buffer = Filesystem.toMappedByteBuffer(geoTiffPath("wm_depth.tif"))
+        val arraySegmentBytes = ArraySegmentBytes(buffer, storage, tiffTags)
+        val expectedArray = arraySegmentBytes.getSegment(0)
+        val expected = expectedArray(0)
+
+        assert(expected == actual)
+      }
+
+      it("should produce the same Byte when it is crated from a ByteBuffer using a Multiband") {
+        val geotiff = MultibandGeoTiff.compressed(geoTiffPath("3bands/3bands-deflate.tif"))
+        val actualArray = geotiff.imageData.compressedBytes(0)
+        val actual = actualArray(0)
+
+        val tiffTags = TiffTagsReader.read(geoTiffPath("3bands/3bands-deflate.tif"))
+        val storage = geotiff.imageData.segmentLayout.storageMethod
+
+        val buffer = Filesystem.toMappedByteBuffer(geoTiffPath("3bands/3bands-deflate.tif"))
+        val arraySegmentBytes = ArraySegmentBytes(buffer, storage, tiffTags)
+        val expectedArray = arraySegmentBytes.getSegment(0)
+        val expected = expectedArray(0)
 
         assert(expected == actual)
       }
