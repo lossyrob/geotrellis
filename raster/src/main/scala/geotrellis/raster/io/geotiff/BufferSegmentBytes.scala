@@ -108,9 +108,9 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
       override def tail =
         new BufferSegmentBytesReader(nextSegment)
 
-      override def isEmpty = position == byteBuffer.capacity
+      override def isEmpty = intersectingOffsets(position) == byteBuffer.capacity
 
       // The Tail definition
-      protected def tailDefined = nextSegment <= byteBuffer.capacity
+      protected def tailDefined = intersectingOffsets(nextSegment) <= byteBuffer.capacity
     }
 }
