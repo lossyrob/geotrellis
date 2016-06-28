@@ -12,7 +12,7 @@ import spire.syntax.cfor._
 
 object GeoTiffTile {
   def apply(
-    compressedBytes: Array[Array[Byte]],
+    compressedBytes: SegmentBytes,
     decompressor: Decompressor,
     segmentLayout: GeoTiffSegmentLayout,
     compression: Compression,
@@ -77,7 +77,7 @@ object GeoTiffTile {
       compressedBytes(i) = compressor.compress(bytes, i)
     }
 
-    apply(compressedBytes, compressor.createDecompressor, segmentLayout, options.compression, tile.cellType)
+    apply(new ArraySegmentBytes(compressedBytes), compressor.createDecompressor, segmentLayout, options.compression, tile.cellType)
   }
 }
 
@@ -104,7 +104,7 @@ abstract class GeoTiffTile(
     }
 
     GeoTiffTile(
-      arr,
+      new ArraySegmentBytes(arr),
       compressor.createDecompressor(),
       segmentLayout,
       compression,
@@ -186,7 +186,7 @@ abstract class GeoTiffTile(
     }
 
     GeoTiffTile(
-      arr,
+      new ArraySegmentBytes(arr),
       compressor.createDecompressor(),
       segmentLayout,
       compression,
@@ -204,7 +204,7 @@ abstract class GeoTiffTile(
     }
 
     GeoTiffTile(
-      arr,
+      new ArraySegmentBytes(arr),
       compressor.createDecompressor(),
       segmentLayout,
       compression,
@@ -260,7 +260,7 @@ abstract class GeoTiffTile(
     }
 
     GeoTiffTile(
-      arr,
+      new ArraySegmentBytes(arr),
       compressor.createDecompressor(),
       segmentLayout,
       compression,
@@ -285,7 +285,7 @@ abstract class GeoTiffTile(
     }
 
     GeoTiffTile(
-      arr,
+      new ArraySegmentBytes(arr),
       compressor.createDecompressor(),
       segmentLayout,
       compression,
@@ -309,7 +309,7 @@ abstract class GeoTiffTile(
         }
 
         GeoTiffTile(
-          arr,
+          new ArraySegmentBytes(arr),
           compressor.createDecompressor(),
           segmentLayout,
           compression,
@@ -337,7 +337,7 @@ abstract class GeoTiffTile(
         }
 
         GeoTiffTile(
-          arr,
+          new ArraySegmentBytes(arr),
           compressor.createDecompressor(),
           segmentLayout,
           compression,

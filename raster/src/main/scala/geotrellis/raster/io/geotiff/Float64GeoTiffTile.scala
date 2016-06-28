@@ -5,7 +5,7 @@ import geotrellis.raster.io.geotiff.compression._
 import spire.syntax.cfor._
 
 class Float64GeoTiffTile(
-  val compressedBytes: Array[Array[Byte]],
+  val compressedBytes: SegmentBytes,
   val decompressor: Decompressor,
   segmentLayout: GeoTiffSegmentLayout,
   compression: Compression,

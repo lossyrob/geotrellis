@@ -34,8 +34,8 @@ object MultibandGeoTiff {
   /** Read a multi-band GeoTIFF file from a byte array.
     * If decompress = true, the GeoTIFF will be fully uncompressed and held in memory.
     */
-  def apply(bytes: Array[Byte], decompress: Boolean): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(bytes, decompress)
+  def apply(bytes: Array[Byte], decompress: Boolean, extent: Extent, windowed: Boolean): MultibandGeoTiff =
+    GeoTiffReader.readMultiband(bytes, decompress, extent, windowed)
 
   /** Read a multi-band GeoTIFF file from the file at the given path.
     * GeoTIFF will be fully decompressed and held in memory.
@@ -46,20 +46,26 @@ object MultibandGeoTiff {
   /** Read a multi-band GeoTIFF file from the file at the given path.
     * If decompress = true, the GeoTIFF will be fully decompressed and held in memory.
     */
-  def apply(path: String, decompress: Boolean): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(path, decompress)
+  def apply(path: String, decompress: Boolean, extent: Extent, windowed: Boolean): MultibandGeoTiff =
+    GeoTiffReader.readMultiband(path, decompress, extent, windowed)
 
   /** Read a multi-band GeoTIFF file from the file at a given path.
     * The tile data will remain tiled/striped and compressed in the TIFF format.
     */
   def compressed(path: String): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(path, false)
+    GeoTiffReader.readMultiband(path, false, Extent(0,0,0,0), false)
 
   /** Read a multi-band GeoTIFF file from a byte array.
     * The tile data will remain tiled/striped and compressed in the TIFF format.
     */
   def compressed(bytes: Array[Byte]): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(bytes, false)
+    GeoTiffReader.readMultiband(bytes, false, Extent(0,0,0,0), false)
+  
+  def windowed(path: String, extent: Extent): MultibandGeoTiff =
+    GeoTiffReader.readMultiband(path, true, extent, true)
+  
+  def windowed(bytes: Array[Byte], extent: Extent): MultibandGeoTiff =
+    GeoTiffReader.readMultiband(bytes, true, extent, true)
 
   def apply(
     tile: MultibandTile,
