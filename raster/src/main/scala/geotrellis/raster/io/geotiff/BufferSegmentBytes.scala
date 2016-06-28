@@ -68,7 +68,13 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
         else
           tiffTags.tileTags.tileOffsets.get
       }
-      offsets.filter(x => intersectingSegments(x))
+      var offset = ListBuffer[Int]()
+
+      cfor(0)(_ < offsets.size, _ + 1) { i =>
+        if (intersectingSegments(i))
+          offset += offsets(i)
+      }
+      offset.toArray
     }
 
     val intersectingByteCounts: Array[Int] = {
@@ -78,7 +84,13 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
         else
           tiffTags.tileTags.tileByteCounts.get
       }
-      byteCounts.filter(x => intersectingSegments(x))
+      var byteCount = ListBuffer[Int]()
+
+      cfor(0)(_ < byteCounts.size, _ + 1) { i =>
+        if (intersectingSegments(i))
+          byteCount += byteCounts(i)
+      }
+      byteCount.toArray
     }
 
     def getSegment(i: Int) = {
@@ -106,7 +118,10 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
       override def head = segment
 
       override def tail =
-        new BufferSegmentBytesReader(nextSegment)
+        if (isEmpty)
+          throw new Error("Out of bounds")
+        else
+          new BufferSegmentBytesReader(nextSegment)
 
       override def isEmpty = intersectingOffsets(position) == byteBuffer.capacity
 
