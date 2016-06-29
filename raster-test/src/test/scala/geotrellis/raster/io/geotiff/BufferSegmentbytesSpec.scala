@@ -17,6 +17,7 @@ class BufferSegmentBytesSpec extends FunSpec
   with GeoTiffTestUtils
   with TileBuilders {
 
+    /*
     describe("Abstracting a ByteBuffer with BufferSegmentBytes") {
       it("should return all segemnts the extent intersects in Singleband") {
         val extent = Extent(0,0,100,100)
@@ -124,4 +125,18 @@ class BufferSegmentBytesSpec extends FunSpec
         expected should not equal reader.head
       }
     }
+    */
+   describe("Reading in a Windowed file") {
+     it("should be windowed") {
+       val extent = Extent(0,0,100,100)
+       
+       val whole = SinglebandGeoTiff(s"$baseDataPath/econic.tif")
+       val wholeBytes = whole.imageData.compressedBytes.size
+
+       val windowed = GeoTiffReader.readSingleband(s"$baseDataPath/econic.tif", false, extent, true)
+       val windowedBytes = windowed.imageData.compressedBytes.size
+
+       windowedBytes should not equal wholeBytes
+     }
+   }
   }

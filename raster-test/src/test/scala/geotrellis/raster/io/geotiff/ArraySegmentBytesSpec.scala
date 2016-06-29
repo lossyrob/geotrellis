@@ -13,7 +13,7 @@ class ArraySegmentBytesSpec extends FunSpec
   with RasterMatchers
   with GeoTiffTestUtils
   with TileBuilders {
-
+/*
     describe("Abstracting an Array[Array[Byte]] with ArraySegmentBytes") {
       it("should contain the same number of segments that are in the Singleband file") {
         val geotiff = SinglebandGeoTiff(s"$baseDataPath/econic.tif")
@@ -99,4 +99,5 @@ class ArraySegmentBytesSpec extends FunSpec
         assert(actual)
       }
     }
+    */
   }
