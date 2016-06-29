@@ -15,8 +15,7 @@ class ArraySegmentBytes(compressedBytes: Array[Array[Byte]]) extends SegmentByte
 
   val size = compressedBytes.size
   def getSegment(i: Int) = compressedBytes(i)
-
-  def toArrayArrayByte = compressedBytes
+  def map(f: Array[Byte] => Int): Seq[Int] = compressedBytes.map(f)
 }
 
 object ArraySegmentBytes {

@@ -7,4 +7,5 @@ package geotrellis.raster.io.geotiff
 trait SegmentBytes {
   val size: Int
   def getSegment(i: Int): Array[Byte]
+  def map(f: Array[Byte] => Int): Seq[Int]
 }

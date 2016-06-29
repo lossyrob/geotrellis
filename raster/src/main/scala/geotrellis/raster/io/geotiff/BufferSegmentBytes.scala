@@ -98,6 +98,11 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
       reader.head
     }
 
+    def map(f: Array[Byte] => Int): Seq[Int] = {
+      val reader = new BufferSegmentBytesReader(0)
+      reader.toArray.map(f)
+    }
+
     /** This class reads through a ByteBuffer lazily via a Stream */
     class BufferSegmentBytesReader(position: Int) extends Stream[Array[Byte]] {
       
