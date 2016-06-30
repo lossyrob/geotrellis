@@ -71,7 +71,7 @@ object SinglebandGeoTiff {
 
   def windowed(path: String, extent: Extent): SinglebandGeoTiff =
     GeoTiffReader.readSingleband(path, true, extent, true)
-  
+
   def windowed(bytes: Array[Byte], extent: Extent): SinglebandGeoTiff =
     GeoTiffReader.readSingleband(bytes, true, extent, true)
 

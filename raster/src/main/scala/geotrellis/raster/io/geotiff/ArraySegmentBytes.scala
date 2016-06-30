@@ -13,9 +13,8 @@ import spire.syntax.cfor._
 
 class ArraySegmentBytes(compressedBytes: Array[Array[Byte]]) extends SegmentBytes {
 
-  val size = compressedBytes.size
+  override val size = compressedBytes.size
   def getSegment(i: Int) = compressedBytes(i)
-  def map(f: Array[Byte] => Int): Seq[Int] = compressedBytes.map(f)
 }
 
 object ArraySegmentBytes {
