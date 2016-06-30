@@ -62,10 +62,10 @@ object MultibandGeoTiff {
     GeoTiffReader.readMultiband(bytes, false, Extent(0,0,0,0), false)
   
   def windowed(path: String, extent: Extent): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(path, true, extent, true)
+    GeoTiffReader.readMultiband(path, false, extent, true)
   
   def windowed(bytes: Array[Byte], extent: Extent): MultibandGeoTiff =
-    GeoTiffReader.readMultiband(bytes, true, extent, true)
+    GeoTiffReader.readMultiband(bytes, false, extent, true)
 
   def apply(
     tile: MultibandTile,

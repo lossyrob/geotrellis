@@ -122,15 +122,11 @@ class BufferSegmentBytes(byteBuffer: ByteBuffer,
 
       override def head = segment
 
-      override def tail =
-        if (isEmpty)
-          throw new Error("Out of bounds")
-        else
-          new BufferSegmentBytesReader(nextSegment)
+      override def tail = new BufferSegmentBytesReader(nextSegment)
 
-      override def isEmpty = intersectingOffsets(position) == byteBuffer.capacity
+      override def isEmpty = position == size
 
       // The Tail definition
-      protected def tailDefined = intersectingOffsets(nextSegment) <= byteBuffer.capacity
+      protected def tailDefined = nextSegment <= size
     }
 }
