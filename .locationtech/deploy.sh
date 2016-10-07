@@ -5,22 +5,22 @@
 set -e
 set -x
 
-./sbt "++@1" "project macros" publish \
-  && ./sbt "++@1" "project vector" publish \
-  && ./sbt "++@1" "project proj4" publish \
-  && ./sbt "++@1" "project raster" publish \
-  && ./sbt "++@1" "project spark" publish \
-  && ./sbt "++@1" "project s3" publish \
-  && ./sbt "++@1" "project accumulo" publish \
-  && ./sbt "++@1" "project cassandra" publish \
-  && ./sbt "++@1" "project hbase" publish \
-  && ./sbt "++@1" "project spark-etl" publish \
-  && ./sbt "++@1" "project geomesa" publish \
-  && ./sbt "++@1" "project geotools" publish \
-  && ./sbt "++@1" "project geowave" publish \
-  && ./sbt "++@1" "project shapefile" publish \
-  && ./sbt "++@1" "project slick" publish \
-  && ./sbt "++@1" "project util" publish \
-  && ./sbt "++@1" "project raster-testkit" publish \
-  && ./sbt "++@1" "project vector-testkit" publish \
-  && ./sbt "++@1" "project spark-testkit" publish
+./sbt "project macros" publish \
+  && ./sbt "project vector" publish \
+  && ./sbt "project proj4" publish \
+  && ./sbt "project raster" publish \
+  && ./sbt "project spark" publish \
+  && ./sbt "project s3" publish \
+  && ./sbt "project accumulo" publish \
+  && ./sbt "project cassandra" publish \
+  && ./sbt "project hbase" publish \
+  && ./sbt "project spark-etl" publish \
+  && ./sbt "project geomesa" publish \
+  && ./sbt "project geotools" publish \
+  && ./sbt "project geowave" publish \
+  && ./sbt "project shapefile" publish \
+  && ./sbt "project slick" publish \
+  && ./sbt "project util" publish \
+  && ./sbt "project raster-testkit" publish \
+  && ./sbt "project vector-testkit" publish \
+  && ./sbt "project spark-testkit" publish
