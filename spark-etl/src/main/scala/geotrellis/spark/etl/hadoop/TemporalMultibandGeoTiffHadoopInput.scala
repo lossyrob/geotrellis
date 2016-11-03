@@ -13,13 +13,16 @@ import org.apache.spark.rdd.RDD
 
 class TemporalMultibandGeoTiffHadoopInput extends HadoopInput[TemporalProjectedExtent, MultibandTile] {
   val format = "temporal-geotiff"
-  def apply(conf: EtlConf)(implicit sc: SparkContext): RDD[(TemporalProjectedExtent, MultibandTile)] =
-    HadoopGeoTiffRDD.temporalMultiband(
-      getPath(conf.input.backend).path,
+  def apply(conf: EtlConf)(implicit sc: SparkContext): RDD[(TemporalProjectedExtent, MultibandTile)] = {
+    val options =
       HadoopGeoTiffRDD.Options(
+        crs = conf.input.getCrs,
+        maxTileSize = conf.input.maxTileSize,
+        numPartitions = conf.input.numPartitions,
         timeTag    = conf.output.keyIndexMethod.timeTag.getOrElse(TemporalGeoTiffInputFormat.GEOTIFF_TIME_TAG_DEFAULT),
-        timeFormat = conf.output.keyIndexMethod.timeFormat.getOrElse(TemporalGeoTiffInputFormat.GEOTIFF_TIME_FORMAT_DEFAULT),
-        crs = conf.input.getCrs
+        timeFormat = conf.output.keyIndexMethod.timeFormat.getOrElse(TemporalGeoTiffInputFormat.GEOTIFF_TIME_FORMAT_DEFAULT)
       )
-    )
+
+    HadoopGeoTiffRDD.temporalMultiband(getPath(conf.input.backend).path, options)
+  }
 }
