@@ -32,12 +32,9 @@ lazy val commonSettings = Seq(
   //     Some("releases" at nexus + "service/local/staging/deploy/maven2")
   // },
 
-publishTo := Some("LocationTech Nexus Repository" at "https://repo.locationtech.org/content/repositories/geotrellis-snapshots"),
+  publishTo := Some("LocationTech Nexus Repository" at "https://repo.locationtech.org/content/repositories/geotrellis-snapshots"),
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
 
-  bintrayOrganization := Some("azavea"),
-  bintrayRepository := "geotrellis",
-  bintrayVcsUrl := Some("https://github.com/geotrellis/geotrellis.git"),
-  bintrayPackageLabels := Info.tags,
 
   addCompilerPlugin("org.spire-math" % "kind-projector" % "0.9.0" cross CrossVersion.binary),
 
