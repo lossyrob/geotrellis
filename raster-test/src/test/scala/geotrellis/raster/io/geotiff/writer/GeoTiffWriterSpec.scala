@@ -19,16 +19,13 @@ package geotrellis.raster.io.geotiff.writer
 import geotrellis.raster._
 import geotrellis.raster.io.geotiff._
 import geotrellis.raster.io.geotiff.reader._
-
 import geotrellis.vector.Extent
-
 import geotrellis.proj4.CRS
 import geotrellis.proj4.LatLng
-
 import geotrellis.raster.testkit._
-
 import java.io._
 
+import geotrellis.raster.io.geotiff.tags.codes.ColorSpace
 import org.scalatest._
 
 class GeoTiffWriterSpec extends FunSpec
@@ -54,6 +51,26 @@ class GeoTiffWriterSpec extends FunSpec
 
       val actual = MultibandGeoTiff(path).tags
       val expected = geoTiff.tags
+
+      actual should be (expected)
+    }
+
+    it("should write GeoTiff with oversized custom tags") {
+      val geoTiff = MultibandGeoTiff(geoTiffPath("multi-tag.tif"))
+
+      val newTag1 = ("SOME_CUSTOM_TAG1" -> "1234567890123456789012345678901")
+      val newTag2 = ("SOME_CUSTOM_TAG2" -> "12345678901234567890123456789012")
+      val headTags = geoTiff.tags.headTags + newTag1 + newTag2
+      val bandTags = geoTiff.tags.bandTags.map(_ + newTag1 + newTag2)
+
+      val taggedTiff = geoTiff.copy(tags = Tags(headTags, bandTags))
+
+      GeoTiffWriter.write(taggedTiff, path)
+
+      addToPurge(path)
+
+      val actual = MultibandGeoTiff(path).tags
+      val expected = taggedTiff.tags
 
       actual should be (expected)
     }
@@ -88,7 +105,7 @@ class GeoTiffWriterSpec extends FunSpec
       actualCRS.epsgCode should be (geoTiff.crs.epsgCode)
     }
 
-    it ("should write floating point rasters correct") {
+    it ("should write floating point rasters correctly") {
       val e = Extent(100.0, 400.0, 120.0, 420.0)
       val t = DoubleArrayTile(Array(11.0, 22.0, 33.0, 44.0), 2, 2)
 
@@ -135,8 +152,8 @@ class GeoTiffWriterSpec extends FunSpec
       gt.crs should equal (geoTiff.crs)
       gt.tile.bandCount should equal (geoTiff.tile.bandCount)
       for(i <- 0 until gt.tile.bandCount) {
-        val actualBand = gt.band(i)
-        val expectedBand = geoTiff.band(i)
+        val actualBand = gt.tile.band(i)
+        val expectedBand = geoTiff.tile.band(i)
 
         assertEqual(actualBand, expectedBand)
       }
@@ -156,7 +173,7 @@ class GeoTiffWriterSpec extends FunSpec
 
       addToPurge(path)
 
-      val gt = MultibandGeoTiff(path)
+      val gt = MultibandGeoTiff(path).projectedRaster
 
       gt.extent should equal (geoTiff.extent)
       gt.crs should equal (geoTiff.crs)
@@ -187,11 +204,42 @@ class GeoTiffWriterSpec extends FunSpec
       gt.crs should equal (geoTiff.crs)
       gt.tile.bandCount should equal (tile.bandCount)
       for(i <- 0 until gt.tile.bandCount) {
-        val actualBand = gt.band(i)
+        val actualBand = gt.tile.band(i)
         val expectedBand = tile.band(i)
 
         assertEqual(actualBand, expectedBand)
       }
+    }
+
+    it("should read photometric interpretation code") {
+      val expected = Map(
+        "colormap.tif" -> ColorSpace.Palette,
+        "multi-tag.tif" -> ColorSpace.RGB,
+        "alaska-polar-3572.tif" -> ColorSpace.BlackIsZero,
+        "3bands/bit/3bands-striped-band.tif" -> ColorSpace.RGB
+      )
+
+      Inspectors.forEvery(expected) {
+        case (file, space) ⇒
+          MultibandGeoTiff(geoTiffPath(file)).options.colorSpace should be (space)
+      }
+    }
+
+    it("should write photometric interpretation code") {
+      // Read in a 4-band file interpreted as RGB(A)
+      val base = MultibandGeoTiff(geoTiffPath("multi-tag.tif"))
+
+      base.options.colorSpace should be (ColorSpace.RGB)
+
+      val modifiedOptions = base.options.copy(colorSpace = ColorSpace.CMYK)
+
+      val modifiedImage = base.copy(options = modifiedOptions)
+
+      GeoTiffWriter.write(modifiedImage, path)
+
+      val reread = MultibandGeoTiff(path)
+
+      reread.options.colorSpace should be (ColorSpace.CMYK)
     }
   }
 }
