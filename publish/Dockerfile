@@ -2,7 +2,9 @@ FROM java:8
 
 USER root
 
+RUN apt-get update
 RUN apt-get install git
+RUN apt-get install -y emacs
 
 RUN useradd -ms /bin/bash geotrellis
 
@@ -19,7 +21,7 @@ WORKDIR /home/geotrellis/geotrellis
 COPY .credentials /home/geotrellis/.ivy2/.credentials
 COPY ./gnupg/ /home/geotrellis/.gnupg/
 COPY local.sbt /home/geotrellis/.sbt/0.13/local.sbt
-COPY plugins.sbt /home/geotrellis/.sbt/0.13/plugins/local.sbt
+COPY plugins.sbt /home/geotrellis/.sbt/0.13/plugins/plugins.sbt
 
 USER root
 

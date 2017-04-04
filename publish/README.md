@@ -14,8 +14,10 @@ addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
 ```
 
 As we change SBT versions, we'll need to modify the `Makefile` to point the correct
-file locations. A current problem with this process is that you may be prompted for and
-need to enter the pgp password manually.
+file locations.
+
+_Note_: A current problem with this process is that you may be prompted for and need to enter the pgp password manually.
+One way around this is to `make run`, open `build.sbt` in emacs and manually place the `pgpPassphrase` setting in the `commonSettings` before running `scripts/publish-to-sonatype.sh`
 
 We also have to change the branch that is checked out in the `Dockerfile` to the
 proper version branch as we change GeoTrellis versions.
