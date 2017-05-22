@@ -26,141 +26,173 @@ import geotrellis.spark.testkit._
 
 import org.scalatest._
 
-class LayerQuerySpec extends FunSpec
-  with TestEnvironment with TestFiles with Matchers {
+class TestItOut extends FunSpec with Matchers {
+  import geotrellis.raster.io.geotiff._
+  import geotrellis.vector.io._
+  import geotrellis.spark._
+  import geotrellis.spark.io._
+  import geotrellis.spark.io.slippy._
 
-  def spatialKeyBoundsKeys(kb: KeyBounds[SpatialKey]) = {
-    for {
-      row <- kb.minKey.row to kb.maxKey.row
-      col <- kb.minKey.col to kb.maxKey.col
-    } yield SpatialKey(col, row)
-  }
+  import java.io.File
 
-  describe("RasterQuerySpec") {
-    val keyBounds = KeyBounds(SpatialKey(1, 1), SpatialKey(6, 7))
+  val e = s"""{"type": "Polygon", "coordinates": [[[1450606.9863003485, 6874761.1777096335], [1453551.0983858046, 6874841.041727237], [1453630.1872897947, 6871890.04526937], [1450687.1503113946, 6871810.256835365], [1450606.9863003485, 6874761.1777096335]]]}""".parseGeoJson[Polygon].envelope
 
-    val md = TileLayerMetadata(
-      FloatConstantNoDataCellType,
-      LayoutDefinition(LatLng.worldExtent, TileLayout(8, 8, 3, 4)),
-      Extent(-135.00000125, -89.99999, 134.99999125, 67.49999249999999),
-      LatLng,
-      keyBounds
-    )
+  describe("ISPRS hacks") {
+    it("georeference the fcn dsm result tifs") {
+      val toref = "/Users/rob/proj/az/deepml/tmpdata/fcndsm/"
+      val fromref = "/Users/rob/proj/az/deepml/tmpdata/fcn/"
+      val result = "/Users/rob/proj/az/deepml/tmpdata/fcn-res/"
 
+      val Coords = """.*(\d?\d)_(\d?\d).*""".r
 
+      val toRefMap =
+        (new File(toref).listFiles().map { f =>
+          val Coords(x, y) = f.getName
+          println(f)
+          ((x, y), f.getAbsolutePath)
+        }).toMap
 
-    it("should be better then Java serialization") {
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(GridBounds(2, 2, 2, 2)))
-      val outKeyBounds = query(md)
-      info(outKeyBounds.toString)
-    }
+      val fromRefMap =
+        (new File(fromref).listFiles().map { f =>
+          val Coords(x, y) = f.getName
+          ((x, y), f.getAbsolutePath)
+        }).toMap
 
-    it("should throw on intersecting regions") {
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]]
-        .where(Intersects(GridBounds(2, 2, 2, 2)) or Intersects(GridBounds(2, 2, 2, 2)))
-
-      intercept[RuntimeException] {
-        query(md)
+      for((key, path) <- toRefMap) {
+        val original = MultibandGeoTiff.compressed(path)
+        val refpath = fromRefMap(key)
+        println(refpath)
+        val (ext, crs) = {
+          val ref = MultibandGeoTiff.streaming(refpath)
+          (ref.extent, ref.crs)
+        }
+        val n = new File(path).getName.replace(".tif", "-geo.tif")
+        val rpath = s"${result}/$n"
+        println(s"Writing $rpath")
+        GeoTiff(original.tile, ext, crs).write(rpath)
       }
     }
 
-  }
+    ignore("normalized dsm") {
+      val b = "/Users/rob/proj/az/deepml/data/geotrellis-dsm-tiles/"
+      val b2 = "/Users/rob/proj/az/deepml/data/"
+      val b3 = "/Users/rob/data/datasets/isprs/potsdam/DSM_normalisation_with_geotrellis_byte/"
 
-  describe("LayerFilter Polygon Intersection") {
-    import geotrellis.vector.{Point, Polygon, MultiPolygon}
+      val l = Seq(
+        "dsm_potsdam_02_10.tff",
+        "dsm_potsdam_02_11.tff",
+        "dsm_potsdam_02_12.tff",
+        "dsm_potsdam_03_10.tff",
+        "dsm_potsdam_03_11.tff",
+        "dsm_potsdam_03_12.tff",
+        "dsm_potsdam_04_10.tff",
+        "dsm_potsdam_04_11.tff",
+        "dsm_potsdam_04_12.tff",
+        "dsm_potsdam_05_10.tff",
+        "dsm_potsdam_05_11.tff",
+        "dsm_potsdam_05_12.tff",
+        "dsm_potsdam_06_07.tff",
+        "dsm_potsdam_06_08.tff",
+        "dsm_potsdam_06_09.tff",
+        "dsm_potsdam_06_10.tff",
+        "dsm_potsdam_06_11.tff",
+        "dsm_potsdam_06_12.tff",
+        "dsm_potsdam_07_07.tff",
+        "dsm_potsdam_07_08.tff",
+        "dsm_potsdam_07_09.tff",
+        "dsm_potsdam_07_10.tff",
+        "dsm_potsdam_07_11.tff",
+        "dsm_potsdam_07_12.tff").map { x => s"${b}${x}" }
 
-    implicit def polygonToMultiPolygon(polygon: Polygon): MultiPolygon = MultiPolygon(polygon)
+      // val mapzens = Seq(
+      //   "mapzen_tile_0-rp.tif",
+      //   "mapzen_tile_1-rp.tif",
+      //   "mapzen_tile_10-rp.tif",
+      //   "mapzen_tile_11-rp.tif",
+      //   "mapzen_tile_12-rp.tif",
+      //   "mapzen_tile_13-rp.tif",
+      //   "mapzen_tile_14-rp.tif",
+      //   "mapzen_tile_15-rp.tif",
+      //   "mapzen_tile_2-rp.tif",
+      //   "mapzen_tile_3-rp.tif",
+      //   "mapzen_tile_4-rp.tif",
+      //   "mapzen_tile_5-rp.tif",
+      //   "mapzen_tile_6-rp.tif",
+      //   "mapzen_tile_7-rp.tif",
+      //   "mapzen_tile_8-rp.tif",
+      //   "mapzen_tile_9-rp.tif"
+      // ).map { x => s"${b2}${x}" }
+      // .map(SinglebandGeoTiff(_)).toArray
+      val mapzen = SinglebandGeoTiff(s"${b2}mapzen.tif")
 
-    val md = AllOnesTestFile.metadata
-    val mt = md.mapTransform
-    val kb = KeyBounds[SpatialKey](SpatialKey(0, 0), SpatialKey(6, 7))
-    val bounds = GridBounds(1, 1, 3, 2)
-    val horizontal = Polygon(List(
-      Point(-130.0, 60.0),
-      Point(-130.0, 30.0),
-      Point(-100.0, 30.0),
-      Point(-100.0, 60.0),
-      Point(-130.0, 60.0)))
-    val vertical = Polygon(List(
-      Point(-130.0, 40.0),
-      Point(-130.0, 30.0),
-      Point(-10.0, 30.0),
-      Point(-10.0, 40.0),
-      Point(-130.0, 40.0)))
-    val diagonal = Polygon(List(
-      Point(-125.0, 60.0),
-      Point(-130.0, 55.0),
-      Point(-15.0, 30.0),
-      Point(-10.0, 35.0),
-      Point(-125.0, 60.0)))
+      import spire.syntax.cfor._
+      import geotrellis.raster.resample._
 
-    def naiveKeys(polygon: MultiPolygon): List[SpatialKey] = {
-      (for ((x, y) <- bounds.coords
-        if polygon.intersects(md.mapTransform(SpatialKey(x, y)))) yield SpatialKey(x, y))
-        .toList
+      val res = new BilinearResample(mapzen.raster.tile, mapzen.raster.extent)
+
+      val minMaxes  = scala.collection.mutable.ListBuffer[(Double, Double)]()
+
+      for(path <- l) {
+        val gt = SinglebandGeoTiff(path)
+        val tile = gt.raster.tile
+        val adjusted =
+          tile.mapDouble { (col, row, z) =>
+            val (x, y) = gt.raster.rasterExtent.gridToMap(col, row)
+            val (mc, mr) = mapzen.raster.rasterExtent.mapToGrid(x, y)
+
+            val mz =
+              if(mc < 0 || mr < 0 || mapzen.raster.tile.cols <= mc || mapzen.raster.tile.rows <= mr) {
+                println("No Match!")
+                println(s"${(x, y)}")
+                0.0
+              } else {
+                res.resampleDouble(x, y)
+              }
+
+            z - mz
+          }
+
+        val (min, max) = adjusted.findMinMaxDouble
+        println(s"$path = min max ${(min, max)}")
+        minMaxes += min -> max
+      }
+
+      val min = minMaxes.map(_._1).min
+      val max = minMaxes.map(_._2).max
+
+      for(path <- l) {
+        val gt = SinglebandGeoTiff(path)
+        val tile = gt.raster.tile
+        val adjusted =
+          tile.mapDouble { (col, row, z) =>
+            val (x, y) = gt.raster.rasterExtent.gridToMap(col, row)
+            val (mc, mr) = mapzen.raster.rasterExtent.mapToGrid(x, y)
+
+            val mz =
+              if(mc < 0 || mr < 0 || mapzen.raster.tile.cols <= mc || mapzen.raster.tile.rows <= mr) {
+                println("No Match!")
+                println(s"${(x, y)}")
+                0.0
+              } else {
+                res.resampleDouble(x, y)
+              }
+
+            z - mz
+          }
+
+        val rescaled =
+          adjusted.delayedConversion(UByteCellType).normalize(min, max, 0.0, 255.0)
+
+        val shaped =
+          if(rescaled.cols != 6000 || rescaled.rows != 6000) {
+            rescaled.resample(gt.raster.extent, 6000, 6000)
+          } else {
+            rescaled
+          }
+
+        GeoTiff(Raster(shaped, gt.raster.extent), gt.crs).write(s"""${b3}normalized-byte-${new java.io.File(path).getName.replace("tff", "tif")}""")
+        println(s"$path = ${shaped.dimensions}")
+      }
     }
-
-    it("should find all keys that intersect appreciably with a horizontal rectangle") {
-      val polygon = horizontal
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(polygon))
-      val actual = query(md).flatMap(spatialKeyBoundsKeys)
-      val expected = naiveKeys(polygon)
-      (expected diff actual) should be ('empty)
-    }
-
-    it("should find all keys that intersect appreciably with a vertical rectangle") {
-      val polygon = vertical
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(polygon))
-      val actual = query(md).flatMap(spatialKeyBoundsKeys)
-      val expected = naiveKeys(polygon)
-      (expected diff actual) should be ('empty)
-    }
-
-    it("should find all keys that intersect appreciably with an L-shaped polygon") {
-      val polygon = MultiPolygon(List(horizontal, vertical))
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(polygon))
-      val actual = query(md).flatMap(spatialKeyBoundsKeys)
-      val expected = naiveKeys(polygon)
-      (expected diff actual) should be ('empty)
-    }
-
-    it("should find all keys that intersect appreciably with a diagonal rectangle") {
-      val polygon = diagonal
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(polygon))
-      val actual = query(md).flatMap(spatialKeyBoundsKeys)
-      val expected = naiveKeys(polygon)
-      (expected diff actual) should be ('empty)
-    }
-  }
-
-  describe("LayerQuery KeyBounds generation") {
-    val md = AllOnesTestFile.metadata
-    val kb = KeyBounds[SpatialKey](SpatialKey(0, 0), SpatialKey(6, 7))
-
-    it("should generate KeyBounds for single region") {
-      val bounds1 = GridBounds(1, 1, 3, 2)
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(bounds1))
-      val expected = for ((x, y) <- bounds1.coords) yield SpatialKey(x, y)
-
-      val found = query(md).flatMap(spatialKeyBoundsKeys)
-      info(s"missing: ${(expected diff found).toList}")
-      info(s"unwanted: ${(found diff expected).toList}")
-
-      found should contain theSameElementsAs expected
-    }
-
-    it("should generate KeyBounds for two regions") {
-      val bounds1 = GridBounds(1, 1, 3, 3)
-      val bounds2 = GridBounds(4, 5, 6, 6)
-      val query = new LayerQuery[SpatialKey, TileLayerMetadata[SpatialKey]].where(Intersects(bounds1) or Intersects(bounds2))
-      val expected = for ((x, y) <- bounds1.coords ++ bounds2.coords) yield SpatialKey(x, y)
-
-      val found = query(md).flatMap(spatialKeyBoundsKeys)
-      info(s"missing: ${(expected diff found).toList}")
-      info(s"unwanted: ${(found diff expected).toList}")
-
-      found should contain theSameElementsAs expected
-    }
-    // TODO: it would be nice to test SpaceTime too, but since time doesn't have a resolution we can not iterate
   }
 }
