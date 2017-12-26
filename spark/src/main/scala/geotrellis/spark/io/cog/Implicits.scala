@@ -103,7 +103,14 @@ trait Implicits {
       overviews: List[GeoTiff[MultibandTile]] = Nil
     )(implicit sc: SpatialComponent[K]): MultibandGeoTiff = {
       val gridBounds =
-        layout.mapTransform.extentToBounds(extent)
+        layout.mapTransform.extentToBounds(
+          Extent(
+            extent.xmin + layout.cellwidth / 2,
+            extent.ymin + layout.cellheight / 2,
+            extent.xmax - layout.cellwidth / 2,
+            extent.ymax - layout.cellheight / 2
+          )
+        )
 
       val tileLayout =
         TileLayout(gridBounds.width, gridBounds.height, layout.tileCols, layout.tileRows)

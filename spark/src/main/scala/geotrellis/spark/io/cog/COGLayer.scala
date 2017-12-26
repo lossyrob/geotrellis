@@ -150,7 +150,18 @@ object COGLayer {
         val keyFormat = kwFomat.value
         partition.map { case (key, tiles) =>
           val extent = key.getComponent[SpatialKey].extent(minZoomLayout)
-          (key, createCog(tiles, zoomRange, layoutScheme, extent, layoutScheme.crs, options, Tags(Map("GT_KEY" -> keyFormat.write(key).prettyPrint), Nil)))
+          (key,
+            createCog(
+              tiles,
+              zoomRange,
+              layoutScheme,
+              extent,
+              layoutScheme.crs,
+              options,
+              Tags(Map("GT_KEY" -> keyFormat.write(key).prettyPrint), Nil
+              )
+            )
+          )
         }
       }
   }

@@ -77,7 +77,6 @@ trait COGLayerWriter {
     tiles.metadata.bounds match {
       case keyBounds: KeyBounds[K] =>
         val cogLayer = COGLayer(tiles, tileZoom)
-        println(cogLayer.metadata.toJson.prettyPrint)
         val keyIndexes =
           cogLayer.metadata.zoomRangeInfos.
             map { case (zr, bounds) => zr -> keyIndexMethod.createIndex(bounds) }.

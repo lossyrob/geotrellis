@@ -205,11 +205,11 @@ object COGLayerMetadata {
     val accSeed = (List[(ZoomRange, KeyBounds[K])](), maxZoom, baseLayout.tileRows, false)
 
     val (zoomRanges, _, _, _) =
-      (maxZoom to minZoom by -1).foldLeft(accSeed) { case ((acc, currMaxZoom, currTileSize, isLowLevel), z) =>
-        if(isLowLevel) {
+      (maxZoom to minZoom by -1).foldLeft(accSeed) { case ((acc, currMaxZoom, currTileSize, isMinLevel), z) =>
+        if(isMinLevel) {
           val thisLayout = layoutScheme.levelForZoom(z).layout
 
-          ((ZoomRange(z, currMaxZoom), getKeyBounds(thisLayout)) :: acc, z - 1, currTileSize, isLowLevel)
+          ((ZoomRange(z, currMaxZoom), getKeyBounds(thisLayout)) :: acc, z - 1, currTileSize, isMinLevel)
         } else {
           val thisLayout = layoutScheme.levelForZoom(z).layout
           val thisTileSize =
@@ -220,17 +220,17 @@ object COGLayerMetadata {
               currTileSize * 2
             }
 
-          val thisIsLowLevel = {
+          val thisIsMinLevel = {
             val SpatialKey(colMin, rowMin) = thisLayout.mapTransform.pointToKey(extent.xmin, extent.ymax)
             val SpatialKey(colMax, rowMax) = thisLayout.mapTransform.pointToKey(extent.xmax, extent.ymin)
             rowMax - rowMin < 2 || colMax - colMin < 2
           }
 
-          if(thisIsLowLevel || thisTileSize >= maxTileSize) {
+          if(thisIsMinLevel || thisTileSize >= maxTileSize || z == minZoom) {
             // thisTileSize is ignored next round
-            ((ZoomRange(z, currMaxZoom), getKeyBounds(thisLayout)) :: acc, z - 1, thisTileSize, thisIsLowLevel)
+            ((ZoomRange(z, currMaxZoom), getKeyBounds(thisLayout)) :: acc, z - 1, thisTileSize, thisIsMinLevel)
           } else {
-            (acc, currMaxZoom, thisTileSize, thisIsLowLevel)
+            (acc, currMaxZoom, thisTileSize, thisIsMinLevel)
           }
         }
       }
